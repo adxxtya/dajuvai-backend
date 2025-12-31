@@ -10,6 +10,8 @@ import { AuthRequest, CombinedAuthRequest, isVendor } from '../middlewares/auth.
 import { sendVerificationEmail } from '../utils/nodemailer.utils';
 import AppDataSource from '../config/db.config';
 import { VendorService } from '../service/vendor.service';
+import { PaginationHelper } from '../utils/helpers/PaginationHelper';
+import { ResponseBuilder } from '../utils/helpers/ResponseBuilder';
 
 /**
  * @class TokenUtils
@@ -213,12 +215,37 @@ export class UserController {
 
     async getAllStaff(req: Request, res: Response) {
         try {
+            // Parse pagination parameters
+            const paginationParams = PaginationHelper.parsePaginationParams(req.query);
+            
             const staff = await getAllStaff();
+            
+            // Paginate in memory (should be done at database level in production)
+            const startIndex = (paginationParams.page - 1) * paginationParams.limit;
+            const endIndex = startIndex + paginationParams.limit;
+            const paginatedStaff = staff.slice(startIndex, endIndex);
+            
+            // Build paginated response
+            const paginatedResponse = PaginationHelper.buildResponse(
+                paginatedStaff,
+                staff.length,
+                paginationParams
+            );
+            
+            // Use ResponseBuilder for consistent response format
+            const requestId = (req as any).requestId;
+            const response = ResponseBuilder.paginated(
+                paginatedResponse.data,
+                paginatedResponse.meta.page,
+                paginatedResponse.meta.limit,
+                paginatedResponse.meta.total,
+                {
+                    requestId,
+                    timestamp: new Date().toISOString(),
+                }
+            );
 
-            res.status(200).json({
-                success: true,
-                data: staff
-            })
+            res.status(200).json(response);
         } catch (error) {
             if (error instanceof APIError) {
                 res.status(error.status).json({ success: false, message: error.message });
@@ -359,17 +386,46 @@ export class UserController {
     /**
      * @method getUsers
      * @route GET /users
-     * @description Fetches all users from the database.
+     * @description Fetches all users from the database with pagination.
      * @param {Request} req - Express request object
      * @param {Response} res - Express response object
-     * @returns {Promise<void>} Resolves with a list of users or error response
+     * @returns {Promise<void>} Resolves with a paginated list of users or error response
      * @access Admin
      */
     async getUsers(req: Request, res: Response): Promise<void> {
         try {
+            // Parse pagination parameters
+            const paginationParams = PaginationHelper.parsePaginationParams(req.query);
+            
             // Fetch all users
             const users = await fetchAllUser();
-            res.status(200).json({ success: true, data: users });
+            
+            // Paginate in memory (should be done at database level in production)
+            const startIndex = (paginationParams.page - 1) * paginationParams.limit;
+            const endIndex = startIndex + paginationParams.limit;
+            const paginatedUsers = users.slice(startIndex, endIndex);
+            
+            // Build paginated response
+            const paginatedResponse = PaginationHelper.buildResponse(
+                paginatedUsers,
+                users.length,
+                paginationParams
+            );
+            
+            // Use ResponseBuilder for consistent response format
+            const requestId = (req as any).requestId;
+            const response = ResponseBuilder.paginated(
+                paginatedResponse.data,
+                paginatedResponse.meta.page,
+                paginatedResponse.meta.limit,
+                paginatedResponse.meta.total,
+                {
+                    requestId,
+                    timestamp: new Date().toISOString(),
+                }
+            );
+            
+            res.status(200).json(response);
         } catch (error) {
             // Handle API errors and internal server errors
             if (error instanceof APIError) {

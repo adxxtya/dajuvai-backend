@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { User } from "./user.entity";
 import { Address } from "./address.entity";
 import { OrderItem } from "./orderItems.entity";
@@ -29,6 +29,9 @@ export enum PaymentMethod {
 }
 
 @Entity('orders')
+@Index(['orderedById', 'status'])
+@Index(['paymentStatus'])
+@Index(['createdAt'])
 export class Order {
     @PrimaryGeneratedColumn()
     id: number;

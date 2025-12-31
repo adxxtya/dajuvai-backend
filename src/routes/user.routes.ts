@@ -11,7 +11,7 @@ import { UserRole } from '../entities/user.entity';
 const userRouter = Router();
 const userController = new UserController();
 
-const frontendUrl = 'https://dajuvai.com';
+const frontendUrl = process.env.FRONTEND_URL || 'https://dajuvai.com';
 
 
 // Rate limiter for sensitive endpoints

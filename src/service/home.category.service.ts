@@ -1,9 +1,14 @@
 import AppDataSource from "../config/db.config";
 import { Category } from "../entities/category.entity";
 import { HomeCategory } from "../entities/home.category";
+import { Repository } from "typeorm";
 
 export class HomeCategoryService {
-    private homecategoryRepo = AppDataSource.getRepository(HomeCategory);
+    private homecategoryRepo: Repository<HomeCategory>;
+
+    constructor() {
+        this.homecategoryRepo = AppDataSource.getRepository(HomeCategory);
+    }
 
     async handleCreateHomeCategory(id: number[]) {
         await this.homecategoryRepo.clear();

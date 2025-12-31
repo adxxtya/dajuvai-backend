@@ -6,6 +6,7 @@ import AppDataSource from '../config/db.config';
 import { v2 as cloudinary } from 'cloudinary';
 import { APIError } from '../utils/ApiError.utils';
 import { Subcategory } from '../entities/subcategory.entity';
+import { CacheService } from '../services/cache/CacheService';
 /**
  * Service for managing category-related operations.
  * 
@@ -15,6 +16,7 @@ export class CategoryService {
     private categoryRepository: Repository<Category>;
     private userRepository: Repository<User>;
     private subcategoryRepository: Repository<Subcategory>;
+    private cacheService: CacheService;
 
     /**
      * Initializes repositories and configures Cloudinary.
@@ -23,6 +25,7 @@ export class CategoryService {
         this.categoryRepository = AppDataSource.getRepository(Category);
         this.userRepository = AppDataSource.getRepository(User);
         this.subcategoryRepository = AppDataSource.getRepository(Subcategory);
+        this.cacheService = new CacheService();
 
         cloudinary.config({
             cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -108,7 +111,12 @@ export class CategoryService {
             image: imageUrl,
         });
 
-        return this.categoryRepository.save(category);
+        const savedCategory = await this.categoryRepository.save(category);
+        
+        // Invalidate category cache
+        await this.cacheService.del('categories:tree');
+        
+        return savedCategory;
     }
 
     /**
@@ -151,12 +159,27 @@ export class CategoryService {
 
     /**
      * Retrieves all categories with their subcategories and creator details.
+     * Uses cache with 24 hour TTL (86400 seconds)
      * 
      * @returns {Promise<Category[]>} - Array of all categories
      * @access Public
      */
     async getCategories(): Promise<Category[]> {
-        return this.categoryRepository.find({ relations: ['subcategories'] });
+        const cacheKey = 'categories:tree';
+        
+        // Try to get from cache first
+        const cachedCategories = await this.cacheService.get<Category[]>(cacheKey);
+        if (cachedCategories) {
+            return cachedCategories;
+        }
+
+        // Cache miss - fetch from database
+        const categories = await this.categoryRepository.find({ relations: ['subcategories'] });
+        
+        // Cache the result with 24 hour TTL (86400 seconds)
+        await this.cacheService.set(cacheKey, categories, 86400);
+        
+        return categories;
     }
 
     /**
@@ -225,6 +248,9 @@ export class CategoryService {
             image: imageUrl,
         });
 
+        // Invalidate category cache
+        await this.cacheService.del('categories:tree');
+
         // Return updated category
         return this.categoryRepository.findOne({ where: { id }, relations: ['subcategories', 'createdBy'] });
     }
@@ -269,5 +295,8 @@ export class CategoryService {
         }
 
         await this.categoryRepository.delete(id);
+        
+        // Invalidate category cache
+        await this.cacheService.del('categories:tree');
     }
 }

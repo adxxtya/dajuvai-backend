@@ -1,0 +1,116 @@
+/**
+ * Error codes for standardized error handling
+ * These codes help clients identify specific error types
+ */
+export enum ErrorCode {
+  // Validation errors (400)
+  VALIDATION_ERROR = 'VALIDATION_ERROR',
+  INVALID_INPUT = 'INVALID_INPUT',
+  
+  // Authentication errors (401)
+  AUTHENTICATION_FAILED = 'AUTHENTICATION_FAILED',
+  INVALID_CREDENTIALS = 'INVALID_CREDENTIALS',
+  INVALID_TOKEN = 'INVALID_TOKEN',
+  TOKEN_EXPIRED = 'TOKEN_EXPIRED',
+  SESSION_REVOKED = 'SESSION_REVOKED',
+  
+  // Authorization errors (403)
+  UNAUTHORIZED_ACCESS = 'UNAUTHORIZED_ACCESS',
+  FORBIDDEN = 'FORBIDDEN',
+  INSUFFICIENT_PERMISSIONS = 'INSUFFICIENT_PERMISSIONS',
+  
+  // Resource errors (404)
+  RESOURCE_NOT_FOUND = 'RESOURCE_NOT_FOUND',
+  USER_NOT_FOUND = 'USER_NOT_FOUND',
+  PRODUCT_NOT_FOUND = 'PRODUCT_NOT_FOUND',
+  ORDER_NOT_FOUND = 'ORDER_NOT_FOUND',
+  
+  // Conflict errors (409)
+  DUPLICATE_RESOURCE = 'DUPLICATE_RESOURCE',
+  EMAIL_ALREADY_EXISTS = 'EMAIL_ALREADY_EXISTS',
+  PHONE_ALREADY_EXISTS = 'PHONE_ALREADY_EXISTS',
+  
+  // Business logic errors (400/422)
+  INSUFFICIENT_STOCK = 'INSUFFICIENT_STOCK',
+  OUT_OF_STOCK = 'OUT_OF_STOCK',
+  INVALID_QUANTITY = 'INVALID_QUANTITY',
+  CART_EMPTY = 'CART_EMPTY',
+  
+  // Payment errors (402/400)
+  PAYMENT_FAILED = 'PAYMENT_FAILED',
+  PAYMENT_VERIFICATION_FAILED = 'PAYMENT_VERIFICATION_FAILED',
+  INVALID_PAYMENT_METHOD = 'INVALID_PAYMENT_METHOD',
+  PAYMENT_AMOUNT_MISMATCH = 'PAYMENT_AMOUNT_MISMATCH',
+  DUPLICATE_PAYMENT = 'DUPLICATE_PAYMENT',
+  
+  // Rate limiting (429)
+  RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED',
+  TOO_MANY_REQUESTS = 'TOO_MANY_REQUESTS',
+  
+  // Server errors (500)
+  INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR',
+  DATABASE_ERROR = 'DATABASE_ERROR',
+  EXTERNAL_SERVICE_ERROR = 'EXTERNAL_SERVICE_ERROR',
+  
+  // File upload errors (400)
+  FILE_TOO_LARGE = 'FILE_TOO_LARGE',
+  INVALID_FILE_TYPE = 'INVALID_FILE_TYPE',
+  UPLOAD_FAILED = 'UPLOAD_FAILED',
+}
+
+/**
+ * Get HTTP status code for error code
+ */
+export function getStatusCodeForErrorCode(code: ErrorCode): number {
+  const statusMap: Record<ErrorCode, number> = {
+    // 400 Bad Request
+    [ErrorCode.VALIDATION_ERROR]: 400,
+    [ErrorCode.INVALID_INPUT]: 400,
+    [ErrorCode.INSUFFICIENT_STOCK]: 400,
+    [ErrorCode.OUT_OF_STOCK]: 400,
+    [ErrorCode.INVALID_QUANTITY]: 400,
+    [ErrorCode.CART_EMPTY]: 400,
+    [ErrorCode.PAYMENT_FAILED]: 400,
+    [ErrorCode.PAYMENT_VERIFICATION_FAILED]: 400,
+    [ErrorCode.INVALID_PAYMENT_METHOD]: 400,
+    [ErrorCode.PAYMENT_AMOUNT_MISMATCH]: 400,
+    [ErrorCode.DUPLICATE_PAYMENT]: 400,
+    [ErrorCode.FILE_TOO_LARGE]: 400,
+    [ErrorCode.INVALID_FILE_TYPE]: 400,
+    [ErrorCode.UPLOAD_FAILED]: 400,
+    
+    // 401 Unauthorized
+    [ErrorCode.AUTHENTICATION_FAILED]: 401,
+    [ErrorCode.INVALID_CREDENTIALS]: 401,
+    [ErrorCode.INVALID_TOKEN]: 401,
+    [ErrorCode.TOKEN_EXPIRED]: 401,
+    [ErrorCode.SESSION_REVOKED]: 401,
+    
+    // 403 Forbidden
+    [ErrorCode.UNAUTHORIZED_ACCESS]: 403,
+    [ErrorCode.FORBIDDEN]: 403,
+    [ErrorCode.INSUFFICIENT_PERMISSIONS]: 403,
+    
+    // 404 Not Found
+    [ErrorCode.RESOURCE_NOT_FOUND]: 404,
+    [ErrorCode.USER_NOT_FOUND]: 404,
+    [ErrorCode.PRODUCT_NOT_FOUND]: 404,
+    [ErrorCode.ORDER_NOT_FOUND]: 404,
+    
+    // 409 Conflict
+    [ErrorCode.DUPLICATE_RESOURCE]: 409,
+    [ErrorCode.EMAIL_ALREADY_EXISTS]: 409,
+    [ErrorCode.PHONE_ALREADY_EXISTS]: 409,
+    
+    // 429 Too Many Requests
+    [ErrorCode.RATE_LIMIT_EXCEEDED]: 429,
+    [ErrorCode.TOO_MANY_REQUESTS]: 429,
+    
+    // 500 Internal Server Error
+    [ErrorCode.INTERNAL_SERVER_ERROR]: 500,
+    [ErrorCode.DATABASE_ERROR]: 500,
+    [ErrorCode.EXTERNAL_SERVICE_ERROR]: 500,
+  };
+  
+  return statusMap[code] || 500;
+}

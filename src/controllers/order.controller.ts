@@ -13,6 +13,8 @@ import AppDataSource from '../config/db.config';
 import { Vendor } from '../entities/vendor.entity';
 import { In, Repository } from 'typeorm';
 import { NotificationService } from '../service/notification.service';
+import { PaginationHelper } from '../utils/helpers/PaginationHelper';
+import { ResponseBuilder } from '../utils/helpers/ResponseBuilder';
 
 
 /**
@@ -388,12 +390,42 @@ export class OrderController {
      * @desc Get all orders (Admin or authorized users)
      * @route GET /orders
      * @access Admin or authorized
-     * @returns List of all orders
+     * @returns List of all orders with pagination
      */
     async getAllOrders(req: AuthRequest, res: Response): Promise<void> {
         try {
+            // Parse pagination parameters
+            const paginationParams = PaginationHelper.parsePaginationParams(req.query);
+            
             const orders = await this.orderService.getAllOrders();
-            res.status(200).json({ success: true, data: orders });
+            
+            // For now, we'll paginate in memory since the service doesn't support pagination yet
+            // In a production system, pagination should be done at the database level
+            const startIndex = (paginationParams.page - 1) * paginationParams.limit;
+            const endIndex = startIndex + paginationParams.limit;
+            const paginatedOrders = orders.slice(startIndex, endIndex);
+            
+            // Build paginated response
+            const paginatedResponse = PaginationHelper.buildResponse(
+                paginatedOrders,
+                orders.length,
+                paginationParams
+            );
+            
+            // Use ResponseBuilder for consistent response format
+            const requestId = (req as any).requestId;
+            const response = ResponseBuilder.paginated(
+                paginatedResponse.data,
+                paginatedResponse.meta.page,
+                paginatedResponse.meta.limit,
+                paginatedResponse.meta.total,
+                {
+                    requestId,
+                    timestamp: new Date().toISOString(),
+                }
+            );
+            
+            res.status(200).json(response);
         } catch (error) {
             if (error instanceof APIError) {
                 res.status(error.status).json({ success: false, message: error.message });
@@ -544,7 +576,7 @@ export class OrderController {
      * @desc Get all orders for a vendor
      * @route GET /vendor/orders
      * @access Vendor
-     * @returns List of orders associated with vendor's products
+     * @returns List of orders associated with vendor's products with pagination
      */
     async getVendorOrders(req: VendorAuthRequest, res: Response): Promise<void> {
         try {
@@ -552,8 +584,37 @@ export class OrderController {
                 throw new APIError(401, 'Vendor not authenticated');
             }
 
+            // Parse pagination parameters
+            const paginationParams = PaginationHelper.parsePaginationParams(req.query);
+            
             const orders = await this.orderService.getVendorOrders(req.vendor.id);
-            res.status(200).json({ success: true, data: orders });
+            
+            // Paginate in memory (should be done at database level in production)
+            const startIndex = (paginationParams.page - 1) * paginationParams.limit;
+            const endIndex = startIndex + paginationParams.limit;
+            const paginatedOrders = orders.slice(startIndex, endIndex);
+            
+            // Build paginated response
+            const paginatedResponse = PaginationHelper.buildResponse(
+                paginatedOrders,
+                orders.length,
+                paginationParams
+            );
+            
+            // Use ResponseBuilder for consistent response format
+            const requestId = (req as any).requestId;
+            const response = ResponseBuilder.paginated(
+                paginatedResponse.data,
+                paginatedResponse.meta.page,
+                paginatedResponse.meta.limit,
+                paginatedResponse.meta.total,
+                {
+                    requestId,
+                    timestamp: new Date().toISOString(),
+                }
+            );
+            
+            res.status(200).json(response);
         } catch (error) {
             if (error instanceof APIError) {
                 res.status(error.status).json({ success: false, message: error.message });
@@ -596,7 +657,7 @@ export class OrderController {
      * @desc Get order history for authenticated customer
      * @route GET /orders/customer/history
      * @access Authenticated User
-     * @returns List of past orders made by the customer
+     * @returns List of past orders made by the customer with pagination
      */
     async getCustomerOrderHistory(req: AuthRequest, res: Response): Promise<void> {
         try {
@@ -606,12 +667,37 @@ export class OrderController {
                 throw new APIError(401, 'User not authenticated');
             }
 
+            // Parse pagination parameters
+            const paginationParams = PaginationHelper.parsePaginationParams(req.query);
+            
             const orders = await this.orderService.getOrderHistoryForCustomer(user);
+            
+            // Paginate in memory (should be done at database level in production)
+            const startIndex = (paginationParams.page - 1) * paginationParams.limit;
+            const endIndex = startIndex + paginationParams.limit;
+            const paginatedOrders = orders.slice(startIndex, endIndex);
+            
+            // Build paginated response
+            const paginatedResponse = PaginationHelper.buildResponse(
+                paginatedOrders,
+                orders.length,
+                paginationParams
+            );
+            
+            // Use ResponseBuilder for consistent response format
+            const requestId = (req as any).requestId;
+            const response = ResponseBuilder.paginated(
+                paginatedResponse.data,
+                paginatedResponse.meta.page,
+                paginatedResponse.meta.limit,
+                paginatedResponse.meta.total,
+                {
+                    requestId,
+                    timestamp: new Date().toISOString(),
+                }
+            );
 
-            res.status(200).json({
-                success: true,
-                data: orders
-            });
+            res.status(200).json(response);
         } catch (error) {
             if (error instanceof APIError) {
                 res.status(error.status).json({ success: false, message: error.message });

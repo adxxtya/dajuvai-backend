@@ -21,6 +21,8 @@ import {
 import { APIError } from '../utils/ApiError.utils';
 import { DistrictService } from '../service/district.service';
 import { findUserByEmail } from '../service/user.service';
+import { PaginationHelper } from '../utils/helpers/PaginationHelper';
+import { ResponseBuilder } from '../utils/helpers/ResponseBuilder';
 
 /**
  * Utility class for token management
@@ -74,9 +76,38 @@ export class VendorController {
      */
     async getVendors(req: VendorAuthRequest, res: Response): Promise<void> {
         try {
+            // Parse pagination parameters
+            const paginationParams = PaginationHelper.parsePaginationParams(req.query);
+            
             /* Fetch all vendors */
             const vendors = await this.vendorService.fetchAllVendors();
-            res.status(200).json({ success: true, data: vendors });
+            
+            // Paginate in memory (should be done at database level in production)
+            const startIndex = (paginationParams.page - 1) * paginationParams.limit;
+            const endIndex = startIndex + paginationParams.limit;
+            const paginatedVendors = vendors.slice(startIndex, endIndex);
+            
+            // Build paginated response
+            const paginatedResponse = PaginationHelper.buildResponse(
+                paginatedVendors,
+                vendors.length,
+                paginationParams
+            );
+            
+            // Use ResponseBuilder for consistent response format
+            const requestId = (req as any).requestId;
+            const response = ResponseBuilder.paginated(
+                paginatedResponse.data,
+                paginatedResponse.meta.page,
+                paginatedResponse.meta.limit,
+                paginatedResponse.meta.total,
+                {
+                    requestId,
+                    timestamp: new Date().toISOString(),
+                }
+            );
+            
+            res.status(200).json(response);
         } catch (error) {
             if (error instanceof APIError) {
                 res.status(error.status).json({ success: false, message: error.message });
@@ -89,23 +120,42 @@ export class VendorController {
 
     async getUnapprovedVendorList(req: AuthRequest, res: Response) {
         try {
+            // Parse pagination parameters
+            const paginationParams = PaginationHelper.parsePaginationParams(req.query);
+            
             const unapprovedList = await this.vendorService.fetchAllUnapprovedVendor();
+            
+            // Paginate in memory (should be done at database level in production)
+            const startIndex = (paginationParams.page - 1) * paginationParams.limit;
+            const endIndex = startIndex + paginationParams.limit;
+            const paginatedList = unapprovedList.slice(startIndex, endIndex);
+            
+            // Build paginated response
+            const paginatedResponse = PaginationHelper.buildResponse(
+                paginatedList,
+                unapprovedList.length,
+                paginationParams
+            );
+            
+            // Use ResponseBuilder for consistent response format
+            const requestId = (req as any).requestId;
+            const response = ResponseBuilder.paginated(
+                paginatedResponse.data,
+                paginatedResponse.meta.page,
+                paginatedResponse.meta.limit,
+                paginatedResponse.meta.total,
+                {
+                    requestId,
+                    timestamp: new Date().toISOString(),
+                }
+            );
 
-            res.status(200).json({
-                success: true,
-                data: unapprovedList
-            })
+            res.status(200).json(response);
         } catch (error) {
             if (error instanceof APIError) {
-                res.status(error.status).json({
-                    success: false,
-                    msg: error.message
-                })
+                res.status(error.status).json({ success: false, message: error.message });
             } else {
-                res.status(500).json({
-                    sucess: false,
-                    msg: "Internal server error"
-                })
+                res.status(500).json({ success: false, message: 'Internal server error' });
             }
         }
     }

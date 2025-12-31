@@ -1,7 +1,8 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm"
+import { Column, CreateDateColumn, Entity, Index, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm"
 import { Product } from './product.entity';
 import { Address } from "./address.entity";
 import { Order } from "./order.entity";
+import { Session } from "./session.entity";
 
 
 export enum AuthProvider {
@@ -17,6 +18,7 @@ export enum UserRole {
 }
 
 @Entity()
+@Index(['email', 'isVerified'])
 export class User {
     @PrimaryGeneratedColumn()
     id: number;
@@ -28,9 +30,11 @@ export class User {
     username: string;
 
     @Column({ unique: true, nullable: true })
+    @Index()
     email: string;
 
     @Column({unique: true, nullable: true})
+    @Index()
     phoneNumber: string;
 
     @Column({
@@ -50,6 +54,9 @@ export class User {
 
     @OneToMany(() => Order, (order) => order.orderedBy)
     orders: Order[];
+
+    @OneToMany(() => Session, (session) => session.user)
+    sessions: Session[];
 
     @Column({ nullable: true })
     googleId?: string

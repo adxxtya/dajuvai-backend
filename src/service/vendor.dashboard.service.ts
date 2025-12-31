@@ -4,11 +4,17 @@ import { Product } from "../entities/product.entity";
 import { Order } from "../entities/order.entity";
 import config from "../config/env.config";
 import { InventoryStatus } from "../entities/product.enum";
+import { Repository } from "typeorm";
 
 export class VendorDashBoardService {
     // Repositories for DB operations on Products and OrderItems
-    private productRepository = AppDataSource.getRepository(Product);
-    private orderItemRepository = AppDataSource.getRepository(OrderItem);
+    private productRepository: Repository<Product>;
+    private orderItemRepository: Repository<OrderItem>;
+
+    constructor() {
+        this.productRepository = AppDataSource.getRepository(Product);
+        this.orderItemRepository = AppDataSource.getRepository(OrderItem);
+    }
 
     /**
      * Get key dashboard stats for a vendor:

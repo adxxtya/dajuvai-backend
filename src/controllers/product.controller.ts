@@ -4,33 +4,34 @@ import { ProductInterface, ProductUpdateType } from '../utils/zod_validations/pr
 import { ProductService } from '../service/product.service';
 import { APIError } from '../utils/ApiError.utils';
 import { IAdminProductQueryParams, IProductQueryParams } from '../interface/product.interface';
-import { v2 as cloudinary } from 'cloudinary';
 import { DataSource } from 'typeorm';
 import { ReviewService } from '../service/review.service';
 import config from '../config/env.config';
 import { string } from 'zod';
+import { ImageUploadService } from '../services/image/ImageUploadService';
+import logger from '../config/logger.config';
+import { PaginationHelper } from '../utils/helpers/PaginationHelper';
+import { ResponseBuilder } from '../utils/helpers/ResponseBuilder';
 
 
 /**
  * @class ProductController
  * @description Handles product-related operations for public users, vendors, and admins.
+ * Requirements: 16.5, 19.1, 19.7, 19.8
  */
 export class ProductController {
     private productService: ProductService;
     private reviewService: ReviewService;
+    private imageUploadService: ImageUploadService;
+    
     /**
      * @constructor
-     * @description Instantiates ProductService for business logic related to products.
+     * @description Instantiates ProductService and ImageUploadService for business logic related to products.
      */
     constructor(dataSource: DataSource) {
         this.productService = new ProductService(dataSource);
         this.reviewService = new ReviewService();
-
-        cloudinary.config({
-            cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-            api_key: process.env.CLOUDINARY_API_KEY,
-            api_secret: process.env.CLOUDINARY_API_SECRET,
-        });
+        this.imageUploadService = new ImageUploadService();
     }
 
     /**
@@ -178,29 +179,43 @@ export class ProductController {
         try {
             console.log("Query params:", req.query);
 
-            const { page, limit, ...filters } = req.query;
+            // Parse pagination parameters using PaginationHelper
+            const paginationParams = PaginationHelper.parsePaginationParams(req.query);
+            
+            const { page, limit, sortBy, sortOrder } = paginationParams;
+            const { ...filters } = req.query;
 
             const queryParams: IProductQueryParams = {
                 ...filters,
-                page: Number(page) || 1,
-                limit: Number(limit) || 40,
+                page,
+                limit,
             };
 
             const result = await this.productService.filterProducts(queryParams);
 
             const productWithRatings = await this.returnProuctRatings(result.data);
 
-            return res.status(200).json({
-                success: true,
-                message: "All products retrieved successfully",
-                data: productWithRatings,
-                meta: {
-                    total: result.total,
-                    page: result.page,
-                    limit: result.limit,
-                    totalPages: result.totalPages,
-                },
-            });
+            // Build paginated response using PaginationHelper
+            const paginatedResponse = PaginationHelper.buildResponse(
+                productWithRatings,
+                result.total,
+                paginationParams
+            );
+
+            // Use ResponseBuilder for consistent response format
+            const requestId = (req as any).requestId;
+            const response = ResponseBuilder.paginated(
+                paginatedResponse.data,
+                paginatedResponse.meta.page,
+                paginatedResponse.meta.limit,
+                paginatedResponse.meta.total,
+                {
+                    requestId,
+                    timestamp: new Date().toISOString(),
+                }
+            );
+
+            return res.status(200).json(response);
         } catch (error) {
             if (error instanceof APIError) {
                 res.status(error.status).json({ success: false, message: error.message });
@@ -253,20 +268,39 @@ export class ProductController {
             // Extract vendor ID from route parameters
             const { vendorId } = req.params;
 
-            // Set default pagination values if not provided
-            const { page = 1, limit = 10 } = req.query;
+            // Parse pagination parameters using PaginationHelper
+            const paginationParams = PaginationHelper.parsePaginationParams(req.query);
 
             // Fetch paginated products for specific vendor
             const { products, total } = await this.productService.getProductsByVendorId(
                 Number(vendorId),
-                Number(page),
-                Number(limit)
+                paginationParams.page,
+                paginationParams.limit
             );
 
             const product = await this.returnProuctRatings(products);
 
+            // Build paginated response
+            const paginatedResponse = PaginationHelper.buildResponse(
+                product,
+                total,
+                paginationParams
+            );
 
-            res.status(200).json({ success: true, data: { product, total } });
+            // Use ResponseBuilder for consistent response format
+            const requestId = (req as any).requestId;
+            const response = ResponseBuilder.paginated(
+                paginatedResponse.data,
+                paginatedResponse.meta.page,
+                paginatedResponse.meta.limit,
+                paginatedResponse.meta.total,
+                {
+                    requestId,
+                    timestamp: new Date().toISOString(),
+                }
+            );
+
+            res.status(200).json(response);
         } catch (error) {
             // Handle API errors with specific status codes
             if (error instanceof APIError) {
@@ -314,6 +348,7 @@ export class ProductController {
      * @param {Response} res - Response object.
      * @returns {Promise<void>} Responds with updated product or error.
      * @access Authenticated
+     * Requirements: 19.7, 19.8
      */
     async deleteProductImage(req: CombinedAuthRequest<{ id: string, subcategoryId: string }, {}, { imageUrl: string }>, res: Response): Promise<void> {
         try {
@@ -343,6 +378,18 @@ export class ProductController {
                 throw new APIError(404, "Product or image not found")
             }
 
+            // Delete image from Cloudinary using ImageUploadService
+            try {
+                const publicId = this.imageUploadService.extractPublicIdFromUrl(imageUrl);
+                if (publicId) {
+                    await this.imageUploadService.deleteImage(publicId);
+                    logger.info('Product image deleted from Cloudinary', { publicId });
+                }
+            } catch (cloudinaryError) {
+                // Log error but don't fail the request since DB is already updated
+                logger.error('Failed to delete image from Cloudinary:', cloudinaryError);
+            }
+
             res.status(200).json({ success: true, data: product });
         } catch (error) {
             // Handle API errors with specific status codes
@@ -350,7 +397,7 @@ export class ProductController {
                 res.status(error.status).json({ success: false, message: error.message });
             } else {
                 // Log unexpected errors for debugging
-                console.error('deleteProductImage error:', error);
+                logger.error('deleteProductImage error:', error);
                 res.status(500).json({ success: false, message: 'Internal Server Error' });
             }
         }
@@ -409,12 +456,35 @@ export class ProductController {
             console.log("----------Req params--------------")
             console.log(req.params);
 
+            // Parse pagination parameters
+            const paginationParams = PaginationHelper.parsePaginationParams(req.query);
+
             // Fetch paginated products with admin-specific filtering
             const { products, total } = await this.productService.getAdminProducts(req.query);
 
             console.log(products)
 
-            res.status(200).json({ success: true, data: { products, total } });
+            // Build paginated response
+            const paginatedResponse = PaginationHelper.buildResponse(
+                products,
+                total,
+                paginationParams
+            );
+
+            // Use ResponseBuilder for consistent response format
+            const requestId = (req as any).requestId;
+            const response = ResponseBuilder.paginated(
+                paginatedResponse.data,
+                paginatedResponse.meta.page,
+                paginatedResponse.meta.limit,
+                paginatedResponse.meta.total,
+                {
+                    requestId,
+                    timestamp: new Date().toISOString(),
+                }
+            );
+
+            res.status(200).json(response);
         } catch (error) {
             console.log(error)
             // Handle API errors with specific status codes
@@ -428,33 +498,88 @@ export class ProductController {
         }
     }
 
+    /**
+     * @method uploadImage
+     * @route POST /products/upload-images
+     * @description Uploads product images with validation and optimization
+     * @param {Request} req - Request with files
+     * @param {Response} res - Response object
+     * @returns {Promise<void>} Responds with uploaded image URLs
+     * @access Vendor
+     * Requirements: 16.5, 19.1, 19.7, 19.8
+     */
     async uplaodImage(req: Request, res: Response) {
+        const uploadedUrls: string[] = [];
+        
         try {
+            // Validate files exist
             if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
-                return res.status(400).json({ success: false, message: 'No files uploaded' });
+                throw new APIError(400, 'No files uploaded');
             }
 
             const files = req.files as Express.Multer.File[];
 
-            const uploadedUrls = await Promise.all(
-                files.map(
-                    file =>
-                        new Promise<string>((resolve, reject) => {
-                            cloudinary.uploader.upload_stream(
-                                { resource_type: 'image', folder: 'products', public_id: `prod_${Date.now()}` },
-                                (error, result) => {
-                                    if (error || !result) return reject(error || new Error('Upload failed'));
-                                    resolve(result.secure_url);
-                                }
-                            ).end(file.buffer);
-                        })
-                )
-            );
+            // Validate file count (max 10)
+            if (files.length > 10) {
+                throw new APIError(400, `Too many files: ${files.length}. Maximum allowed: 10`);
+            }
 
-            res.status(200).json({ success: true, urls: uploadedUrls });
-        } catch (err) {
-            console.error('Image upload error:', err);
-            res.status(500).json({ success: false, message: 'Image upload failed' });
+            // Validate each file (size, type)
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+            const maxSize = 5 * 1024 * 1024; // 5MB
+
+            for (const file of files) {
+                if (!allowedTypes.includes(file.mimetype)) {
+                    throw new APIError(
+                        400,
+                        `Invalid file type: ${file.mimetype}. Allowed types: jpeg, png, webp`
+                    );
+                }
+
+                if (file.size > maxSize) {
+                    throw new APIError(
+                        400,
+                        `File size ${(file.size / 1024 / 1024).toFixed(2)}MB exceeds maximum 5MB`
+                    );
+                }
+            }
+
+            logger.info('Uploading product images', { count: files.length });
+
+            // Upload images using ImageUploadService (max 3 concurrent)
+            const urls = await this.imageUploadService.uploadMultipleImages(files, 'products', 3);
+            uploadedUrls.push(...urls);
+
+            logger.info('Product images uploaded successfully', { count: urls.length });
+
+            res.status(200).json({ 
+                success: true, 
+                urls: urls,
+                message: `${urls.length} image(s) uploaded successfully`
+            });
+        } catch (error) {
+            // On error, delete already uploaded images
+            if (uploadedUrls.length > 0) {
+                logger.warn('Upload failed, cleaning up uploaded images', { count: uploadedUrls.length });
+                
+                for (const url of uploadedUrls) {
+                    try {
+                        const publicId = this.imageUploadService.extractPublicIdFromUrl(url);
+                        if (publicId) {
+                            await this.imageUploadService.deleteImage(publicId);
+                        }
+                    } catch (cleanupError) {
+                        logger.error('Failed to cleanup uploaded image:', cleanupError);
+                    }
+                }
+            }
+
+            if (error instanceof APIError) {
+                res.status(error.status).json({ success: false, message: error.message });
+            } else {
+                logger.error('Image upload error:', error);
+                res.status(500).json({ success: false, message: 'Image upload failed' });
+            }
         }
     }
 }

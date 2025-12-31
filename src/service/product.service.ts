@@ -19,6 +19,7 @@ import { BannerService } from './banner.service';
 import { DealService } from './deal.service';
 import { SubcategoryService } from './subcategory.service';
 import { Variant } from '../entities/variant.entity';
+import { CacheService } from '../services/cache/CacheService';
 
 /**
  * Service class for handling product-related operations.
@@ -48,6 +49,7 @@ export class ProductService {
     private bannerService: BannerService;
     private dealService: DealService;
     private variantRepository: Repository<Variant>;
+    private cacheService: CacheService;
 
     constructor(private dataSource: DataSource) {
         this.productRepository = this.dataSource.getRepository(Product);
@@ -65,7 +67,8 @@ export class ProductService {
         this.subcategoryService = new SubcategoryService();
         this.bannerService = new BannerService();
         this.dealService = new DealService();
-        this.variantRepository = this.dataSource.getRepository(Variant)
+        this.variantRepository = this.dataSource.getRepository(Variant);
+        this.cacheService = new CacheService();
         cloudinary.config({
             cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
             api_key: process.env.CLOUDINARY_API_KEY,
@@ -83,6 +86,16 @@ export class ProductService {
     }
 
     async getProductDetailsById(productId: number): Promise<Product> {
+        // Cache key format: product:{id}
+        const cacheKey = `product:${productId}`;
+        
+        // Try to get from cache first
+        const cachedProduct = await this.cacheService.get<Product>(cacheKey);
+        if (cachedProduct) {
+            return cachedProduct;
+        }
+
+        // Cache miss - fetch from database
         const product = await this.productRepository.findOne({
             where: { id: productId },
             relations: ['vendor', 'variants', 'reviews'], // Include variants relation
@@ -91,6 +104,9 @@ export class ProductService {
         if (!product) {
             throw new APIError(404, `Product does not exist`);
         }
+
+        // Cache the result with 1 hour TTL (3600 seconds)
+        await this.cacheService.set(cacheKey, product, 3600);
 
         return product;
     }
@@ -198,6 +214,9 @@ export class ProductService {
 
             savedProduct.variants = savedVariants;
         }
+
+        // Invalidate all product list caches since a new product was created
+        await this.cacheService.invalidatePattern('products:list:*');
 
         return savedProduct;
     }
@@ -330,7 +349,14 @@ export class ProductService {
             product.hasVariants = true;
         }
 
-        return await this.productRepository.save(product);
+        const updatedProduct = await this.productRepository.save(product);
+
+        // Invalidate cache for this product
+        await this.cacheService.del(`product:${productId}`);
+        // Invalidate all product list caches
+        await this.cacheService.invalidatePattern('products:list:*');
+
+        return updatedProduct;
     }
 
     async getAllProducts(): Promise<Product[]> {
@@ -468,6 +494,11 @@ export class ProductService {
 
         qb.skip(skip).take(limit);
 
+        // Add TypeORM query cache with 5 minute TTL (300000 ms)
+        // Cache key includes all filter parameters for proper cache segmentation
+        const cacheKey = `products:list:${JSON.stringify(params)}`;
+        qb.cache(cacheKey, 300000);
+
         const [data, total] = await qb.getManyAndCount();
 
         return {
@@ -583,6 +614,11 @@ export class ProductService {
         }
 
         await this.productRepository.delete(id);
+
+        // Invalidate cache for this product
+        await this.cacheService.del(`product:${id}`);
+        // Invalidate all product list caches
+        await this.cacheService.invalidatePattern('products:list:*');
     }
 
     async deleteProductImage(
@@ -704,5 +740,10 @@ export class ProductService {
         if (result.affected === 0) {
             throw new APIError(404, "Product does not exists")
         }
+
+        // Invalidate cache for this product
+        await this.cacheService.del(`product:${id}`);
+        // Invalidate all product list caches
+        await this.cacheService.invalidatePattern('products:list:*');
     }
 }

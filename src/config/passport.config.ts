@@ -7,9 +7,9 @@ import AppDataSource from "./db.config";
 import jwt from "jsonwebtoken";
 import { APIError } from "../utils/ApiError.utils";
 
-// Initialize User repository to interact with the database
-// This sets up TypeORM to perform CRUD operations on the User entity
-const userDB = AppDataSource.getRepository(User);
+// Lazy getter for User repository to avoid accessing AppDataSource before initialization
+// This ensures the repository is only accessed when needed, not at module load time
+const getUserRepository = () => AppDataSource.getRepository(User);
 
 // Extracts JWT from request cookies
 // Purpose: Retrieves the JWT stored in the 'token' cookie for authentication
@@ -56,7 +56,7 @@ passport.use(
         async (jwt_payload, done) => {
             try {
                 // Look up user by ID from JWT payload
-                const user = await userDB.findOneBy({ id: jwt_payload.id });
+                const user = await getUserRepository().findOneBy({ id: jwt_payload.id });
                 if (user) {
                     // User found, pass to Passport for successful authentication
                     return done(null, user);
@@ -88,10 +88,13 @@ passport.use(
         {
             clientID: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            callbackURL: "https://api.dajuvai.com/api/auth/google/callback",
+            callbackURL: process.env.NODE_ENV === 'production' 
+                ? "https://api.dajuvai.com/api/auth/google/callback"
+                : "http://localhost:5000/api/auth/google/callback",
         },
         async (accessToken, refreshToken, profile, done) => {
             try {
+                const userDB = getUserRepository();
                 // Check if user exists with the Google ID
                 let user = await userDB.findOne({
                     where: { googleId: profile.id },
@@ -171,6 +174,7 @@ passport.use(
         },
         async (accessToken, refreshToken, profile, done) => {
             try {
+                const userDB = getUserRepository();
                 // Check if user exists with the Facebook ID
                 let user = await userDB.findOne({
                     where: { facebookId: profile.id },

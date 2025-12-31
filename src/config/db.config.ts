@@ -1,5 +1,3 @@
-
-
 import { DataSource } from "typeorm";
 import { config } from "dotenv"
 import { User } from "../entities/user.entity"
@@ -25,28 +23,88 @@ import { Promo } from "../entities/promo.entity";
 import { Variant } from "../entities/variant.entity";
 import { HomeCategory } from "../entities/home.category";
 import { Notification } from "../entities/notification.entity";
-
-
-
-
+import { Session } from "../entities/session.entity";
+import logger from "./logger.config";
 
 config()
 
+/**
+ * Custom logger for TypeORM that logs slow queries
+ * Requirements: 20.8
+ */
+class DatabaseLogger {
+  private slowQueryThreshold: number;
 
+  constructor() {
+    // Set threshold based on environment: 100ms in dev, 500ms in prod
+    this.slowQueryThreshold = process.env.NODE_ENV === 'production' ? 500 : 100;
+  }
 
+  logQuery(query: string, parameters?: any[], queryRunner?: any) {
+    if (process.env.NODE_ENV === 'development') {
+      logger.debug('Query executed', { query, parameters });
+    }
+  }
+
+  logQueryError(error: string | Error, query: string, parameters?: any[], queryRunner?: any) {
+    logger.error('Query failed', {
+      error: error instanceof Error ? error.message : error,
+      query,
+      parameters,
+    });
+  }
+
+  logQuerySlow(time: number, query: string, parameters?: any[], queryRunner?: any) {
+    if (time >= this.slowQueryThreshold) {
+      logger.warn('Slow query detected', {
+        executionTime: `${time}ms`,
+        threshold: `${this.slowQueryThreshold}ms`,
+        query,
+        parameters,
+      });
+    }
+  }
+
+  logSchemaBuild(message: string, queryRunner?: any) {
+    logger.info('Schema build', { message });
+  }
+
+  logMigration(message: string, queryRunner?: any) {
+    logger.info('Migration', { message });
+  }
+
+  log(level: 'log' | 'info' | 'warn', message: any, queryRunner?: any) {
+    switch (level) {
+      case 'log':
+      case 'info':
+        logger.info(message);
+        break;
+      case 'warn':
+        logger.warn(message);
+        break;
+    }
+  }
+}
 
 const AppDataSource = new DataSource({
   type: "postgres",
   url: process.env.DATABASE_URL,
-  synchronize: true,
-  logging: false,
+  synchronize: process.env.NODE_ENV === 'development',
+  logging: process.env.NODE_ENV === 'development',
+  logger: new DatabaseLogger() as any,
+  maxQueryExecutionTime: process.env.NODE_ENV === 'production' ? 500 : 100, // Log slow queries
   entities: [User, Category, Subcategory, Product, Vendor, Brand, Cart, CartItem, Wishlist, WishlistItem, Review, Deal, Address, Order, OrderItem,
-    Banner, Contact, District, HomePageSection, Promo, Variant, HomeCategory, Notification],
-  migrations: [],
-  ssl: false,
-  // ssl: {
-  //   rejectUnauthorized: false, // Required for Render's managed Postgres
-  // },
+    Banner, Contact, District, HomePageSection, Promo, Variant, HomeCategory, Notification, Session],
+  migrations: ['src/migrations/*.ts'],
+  migrationsRun: true,
+  extra: {
+    max: 20,
+    min: 5,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+  },
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
 export default AppDataSource;
+export { AppDataSource };

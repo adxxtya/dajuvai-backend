@@ -1,4 +1,4 @@
-import { In } from "typeorm";
+import { In, Repository } from "typeorm";
 import AppDataSource from "../config/db.config";
 import { Notification, NotificationTarget, NotificationType } from "../entities/notification.entity";
 import { Vendor } from "../entities/vendor.entity";
@@ -7,10 +7,15 @@ import { APIError } from "../utils/ApiError.utils";
 import { User, UserRole } from "../entities/user.entity";
 
 export class NotificationService {
-    private notificationRepo = AppDataSource.getRepository(Notification);
-    private vendorRepo = AppDataSource.getRepository(Vendor);
-    private orderRepo = AppDataSource.getRepository(Order);
+    private notificationRepo: Repository<Notification>;
+    private vendorRepo: Repository<Vendor>;
+    private orderRepo: Repository<Order>;
 
+    constructor() {
+        this.notificationRepo = AppDataSource.getRepository(Notification);
+        this.vendorRepo = AppDataSource.getRepository(Vendor);
+        this.orderRepo = AppDataSource.getRepository(Order);
+    }
 
     async getNotifications(authEntity: User | Vendor): Promise<Notification[]> {
         if (!authEntity) {

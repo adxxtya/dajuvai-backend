@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn, VersionColumn } from "typeorm";
 import { DiscountType, InventoryStatus } from "./product.enum";
 import { Product } from "./product.entity";
 
@@ -6,6 +6,9 @@ import { Product } from "./product.entity";
 export class Variant {
     @PrimaryGeneratedColumn()
     id: string;
+
+    @VersionColumn()
+    version: number;
 
     @Column({ type: 'varchar', length: 100 })
     sku: string;

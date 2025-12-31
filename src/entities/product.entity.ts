@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, JoinColumn, CreateDateColumn, UpdateDateColumn } from "typeorm";
+import { Column, Entity, Index, ManyToOne, OneToMany, PrimaryGeneratedColumn, JoinColumn, CreateDateColumn, UpdateDateColumn, VersionColumn } from "typeorm";
 import { Subcategory } from "./subcategory.entity";
 import { Vendor } from "./vendor.entity";
 import { Deal } from "./deal.entity";
@@ -10,11 +10,13 @@ import { Review } from "./reviews.entity";
 import { Variant } from "./variant.entity";
 
 @Entity('products')
+@Index(['vendorId', 'subcategoryId'])
 export class Product {
     @PrimaryGeneratedColumn()
     id: number;
 
     @Column()
+    @Index()
     name: string;
 
     @Column({ nullable: true })
@@ -41,7 +43,11 @@ export class Product {
     status?: InventoryStatus;
 
     @Column({ nullable: true })
+    @Index()
     stock?: number;
+
+    @VersionColumn()
+    version: number;
 
     @ManyToOne(() => Subcategory, { onDelete: "SET NULL" })
     @JoinColumn({ name: "subcategoryId" })
