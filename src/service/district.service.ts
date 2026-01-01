@@ -136,7 +136,7 @@ export class DistrictService {
     }
 
     /**
-     * Finds a district by its name.
+     * Finds a district by its name (case-insensitive).
      * 
      * @param districtName {string} - Name of the district
      * @returns {Promise<District | null>} - Found district or null if not found
@@ -148,6 +148,10 @@ export class DistrictService {
             throw new APIError(400, "District name is required");
         }
 
-        return await this.districtRepository.findOne({ where: { name: districtName } });
+        // Case-insensitive search using LOWER() function
+        return await this.districtRepository
+            .createQueryBuilder('district')
+            .where('LOWER(district.name) = LOWER(:name)', { name: districtName })
+            .getOne();
     }
 }

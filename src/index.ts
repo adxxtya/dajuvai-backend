@@ -108,39 +108,14 @@ addSentryMiddleware(app);
 const securityHeaders = initializeSecurityHeaders();
 securityHeaders.forEach(middleware => app.use(middleware));
 
-const allowedOrigins = [
-    'https://dajuvai-frontend-ykrq.vercel.app',
-    'https://dajuvai.com',
-    'https://www.dajuvai.com',
-    "http://localhost:5173",
-    "http://localhost:3000",
-    'https://dev.dajuvai.com',
-    'https://5srbcmrc-5173.inc1.devtunnels.ms'
-]
-
-// CORS configuration
+// CORS configuration - Allow all origins
 app.use(cors({
-    origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-        
-        // Check if origin matches allowed origins or is a subdomain of dajuvai.com
-        const isDajuvaiSubdomain = origin && /^https:\/\/([a-z0-9-]+\.)?dajuvai\.com$/.test(origin);
-        
-        if (allowedOrigins.indexOf(origin) !== -1 || isDajuvaiSubdomain) {
-            callback(null, true);
-        } else {
-            // In development, allow all origins
-            if (process.env.NODE_ENV !== 'production') {
-                callback(null, true);
-            } else {
-                callback(new Error('Not allowed by CORS'));
-            }
-        }
-    },
+    origin: true, // Accept requests from any origin
     credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+    exposedHeaders: ['Content-Range', 'X-Content-Range'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    maxAge: 86400 // 24 hours
 }));
 
 // Compression middleware

@@ -97,7 +97,8 @@
     "start:prod": "node dist/index.js",
     "migration:generate": "typeorm migration:generate -d src/config/db.config.ts",
     "migration:run": "typeorm migration:run -d src/config/db.config.ts",
-    "migration:revert": "typeorm migration:revert -d src/config/db.config.ts"
+    "migration:revert": "typeorm migration:revert -d src/config/db.config.ts",
+    "seed:districts": "ts-node src/scripts/seedDistricts.ts"
   },
   "keywords": [],
   "author": "",

@@ -130,14 +130,17 @@ export class OrderService {
 
 
     /**
- * Retrieve a District entity by its name.
+ * Retrieve a District entity by its name (case-insensitive).
  * @param {string} districtName - The name of the district to look up.
  * @throws {APIError} Throws 400 error if the district is not found.
  * @returns {Promise<District>} The matched District entity.
  */
     private async getDistrict(districtName: string): Promise<District> {
-        // Attempt to find the district by its name
-        const district = await this.districtRepository.findOne({ where: { name: districtName } });
+        // Attempt to find the district by its name (case-insensitive)
+        const district = await this.districtRepository
+            .createQueryBuilder('district')
+            .where('LOWER(district.name) = LOWER(:name)', { name: districtName })
+            .getOne();
 
         // If the district does not exist, throw an error
         if (!district) throw new APIError(400, 'Invalid district');
