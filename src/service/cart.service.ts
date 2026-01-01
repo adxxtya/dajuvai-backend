@@ -54,8 +54,7 @@ export class CartService {
 
         let price: number;
         let name: string = product.name;
-        let miniDescription: string = product.miniDescription || '';
-        let longDescription: string = product.longDescription || '';
+        let description: string = product.description || '';
         let image: string | null = product.productImages?.[0] ?? null;
         let cartItem: CartItem;
 
@@ -120,7 +119,7 @@ export class CartService {
             }
             cartItem.price = price;
             cartItem.name = name;
-            cartItem.description = miniDescription;
+            cartItem.description = description;
             cartItem.image = image;
             await this.cartItemRepository.save(cartItem);
         } else {
@@ -131,7 +130,7 @@ export class CartService {
                 quantity,
                 price,
                 name,
-                description: miniDescription,
+                description,
                 image,
                 variantId: variantId || null,
                 variant: variantId ? await this.variantRepository.findOne({ where: { id: variantId.toString() } }) : undefined,

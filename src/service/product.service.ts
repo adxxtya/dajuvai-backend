@@ -18,6 +18,7 @@ import { CategoryService } from './category.service';
 import { BannerService } from './banner.service';
 import { DealService } from './deal.service';
 import { SubcategoryService } from './subcategory.service';
+import { MulterFile } from '../config/multer.config';
 import { Variant } from '../entities/variant.entity';
 import { CacheService } from '../services/cache/CacheService';
 
@@ -126,8 +127,7 @@ export class ProductService {
     ): Promise<Product> {
         const {
             name,
-            miniDescription,
-            longDescription,
+            description,
             basePrice,
             discount,
             discountType,
@@ -171,8 +171,7 @@ export class ProductService {
         // Create product
         const product = this.productRepository.create({
             name,
-            miniDescription,
-            longDescription,
+            description,
             basePrice: isVariantProduct ? null : parseFloat(basePrice || '0'),
             discount: parseFloat(discount || '0'),
             discountType: discountType || DiscountType.PERCENTAGE,
@@ -246,8 +245,7 @@ export class ProductService {
     ): Promise<Product> {
         const {
             name,
-            miniDescription,
-            longDescription,
+            description,
             basePrice,
             discount,
             discountType,
@@ -260,9 +258,6 @@ export class ProductService {
             brandId,
             productImages
         } = data;
-
-        console.log(miniDescription)
-        console.log(longDescription)
 
         const whereClause = isAdmin ? { id: productId } : { id: productId, vendor: { id: authId } };
         const product = await this.productRepository.findOne({ where: whereClause, relations: ['variants'] });
@@ -284,8 +279,7 @@ export class ProductService {
 
         // Update product fields
         product.name = name ?? product.name;
-        product.miniDescription = miniDescription ?? product.miniDescription;
-        product.longDescription = longDescription ?? product.longDescription;
+        product.description = description ?? product.description;
         product.basePrice = hasVariantsBool ? null : (basePrice !== undefined ? parseFloat(basePrice.toString()) : product.basePrice);
         product.discount = discount !== undefined ? parseFloat(discount.toString()) : product.discount;
         product.discountType = discountType ?? product.discountType;
@@ -378,6 +372,7 @@ export class ProductService {
             dealId,
             sort = 'all',
             bannerId,
+            vendorId
         } = params;
 
         const qb = this.productRepository
@@ -420,6 +415,11 @@ export class ProductService {
             const deal = await this.dealRepository.findOne({ where: { id: dealId } });
             if (!deal) throw new APIError(404, 'Deal does not exist');
             qb.andWhere('product.dealId = :dealId', { dealId });
+        }
+        if (vendorId) {
+            const vendor = await this.vendorRepository.findOne({ where: { id: Number(vendorId) } })
+            if (!vendor) throw new APIError(404, "Invalid vendor id")
+            qb.andWhere('product.vendorId = :vendorId', { vendorId })
         }
 
         if (search) {
@@ -513,7 +513,7 @@ export class ProductService {
     async getAdminProducts(
         params: IAdminProductQueryParams
     ): Promise<{ products: Product[]; total: number; page: number; limit: number }> {
-        const { page = 1, limit = 7, sort = 'createdAt', filter } = params;
+        const { page = 1, limit = 7, sort = 'createdAt', filter, vendorId } = params;
 
         const query = this.productRepository.createQueryBuilder('product')
             .leftJoinAndSelect('product.vendor', 'vendor')
@@ -537,6 +537,10 @@ export class ProductService {
 
         if (filter === 'out_of_stock') {
             query.andWhere('(product.stock = 0 OR variants.stock = 0)');
+        }
+
+        if(vendorId){
+            query.andWhere('product.vendorId = :vendorId', {vendorId})
         }
 
         switch (sort) {

@@ -31,8 +31,7 @@ interface VariantInterface {
 
 export interface ProductInterface {
     name: string;
-    miniDescription?: string;
-    longDescription?: string;
+    description?: string;
     basePrice?: string; // Required for non-variant products
     discount?: string; // Optional, defaults to "0"
     discountType?: DiscountType; // Optional, defaults to PERCENTAGE

@@ -455,6 +455,7 @@ export class ProductController {
             console.log("----------------------Admin product api hit--------------------")
             console.log("----------Req params--------------")
             console.log(req.params);
+            console.log(req.query)
 
             // Parse pagination parameters
             const paginationParams = PaginationHelper.parsePaginationParams(req.query);
@@ -462,7 +463,7 @@ export class ProductController {
             // Fetch paginated products with admin-specific filtering
             const { products, total } = await this.productService.getAdminProducts(req.query);
 
-            console.log(products)
+            // console.log(products)
 
             // Build paginated response
             const paginatedResponse = PaginationHelper.buildResponse(
