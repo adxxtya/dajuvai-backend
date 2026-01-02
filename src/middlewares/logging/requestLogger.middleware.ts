@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 console.log('→ Loading request logger middleware, importing logger...');
 
 // Lazy load logger to avoid circular dependency issues
@@ -95,7 +95,7 @@ export function requestLogger(
   next: NextFunction
 ): void {
   // Generate unique request ID
-  const requestId = uuidv4();
+  const requestId = randomUUID();
   req.requestId = requestId;
   req.startTime = Date.now();
 
@@ -168,7 +168,7 @@ export function detailedRequestLogger(
   res: Response,
   next: NextFunction
 ): void {
-  const requestId = uuidv4();
+  const requestId = randomUUID();
   req.requestId = requestId;
   req.startTime = Date.now();
 
