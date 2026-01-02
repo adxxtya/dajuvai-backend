@@ -95,7 +95,7 @@ const AppDataSource = new DataSource({
   maxQueryExecutionTime: process.env.NODE_ENV === 'production' ? 500 : 100, // Log slow queries
   entities: [User, Category, Subcategory, Product, Vendor, Brand, Cart, CartItem, Wishlist, WishlistItem, Review, Deal, Address, Order, OrderItem,
     Banner, Contact, District, HomePageSection, Promo, Variant, HomeCategory, Notification, Session],
-  migrations: ['src/migrations/*.ts'],
+  migrations: [__dirname.includes('dist') ? 'dist/migrations/*.js' : 'src/migrations/*.ts'],
   migrationsRun: true,
   extra: {
     max: 20,
