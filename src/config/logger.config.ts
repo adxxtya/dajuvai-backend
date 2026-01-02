@@ -139,33 +139,37 @@ const logger = winston.createLogger({
 /**
  * Handle uncaught exceptions
  */
-try {
-  logger.exceptions.handle(
-    new winston.transports.File({
-      filename: join(__dirname, '../../logs/exceptions.log'),
-      format: fileFormat,
-      maxsize: 5 * 1024 * 1024,
-      maxFiles: 5,
-    })
-  );
-} catch (error) {
-  console.warn('Warning: Could not create exceptions log file transport:', error);
+if (process.env.DISABLE_FILE_LOGGING !== 'true') {
+  try {
+    logger.exceptions.handle(
+      new winston.transports.File({
+        filename: join(__dirname, '../../logs/exceptions.log'),
+        format: fileFormat,
+        maxsize: 5 * 1024 * 1024,
+        maxFiles: 5,
+      })
+    );
+  } catch (error) {
+    console.warn('Warning: Could not create exceptions log file transport:', error);
+  }
 }
 
 /**
  * Handle unhandled promise rejections
  */
-try {
-  logger.rejections.handle(
-    new winston.transports.File({
-      filename: join(__dirname, '../../logs/rejections.log'),
-      format: fileFormat,
-      maxsize: 5 * 1024 * 1024,
-      maxFiles: 5,
-    })
-  );
-} catch (error) {
-  console.warn('Warning: Could not create rejections log file transport:', error);
+if (process.env.DISABLE_FILE_LOGGING !== 'true') {
+  try {
+    logger.rejections.handle(
+      new winston.transports.File({
+        filename: join(__dirname, '../../logs/rejections.log'),
+        format: fileFormat,
+        maxsize: 5 * 1024 * 1024,
+        maxFiles: 5,
+      })
+    );
+  } catch (error) {
+    console.warn('Warning: Could not create rejections log file transport:', error);
+  }
 }
 
 /**

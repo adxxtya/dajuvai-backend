@@ -1,7 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
 import DOMPurify from 'isomorphic-dompurify';
 import validator from 'validator';
-import logger from '../../config/logger.config';
+
+// Lazy load logger to avoid circular dependency
+let logger: any = null;
+function getLogger() {
+  if (!logger) {
+    logger = require('../../config/logger.config').default;
+  }
+  return logger;
+}
 
 /**
  * Sanitize a single string value
@@ -105,7 +113,7 @@ export function sanitizeInput(
 
     next();
   } catch (error) {
-    logger.error('Error during input sanitization:', error);
+    getLogger().error('Error during input sanitization:', error);
     // Continue even if sanitization fails (graceful degradation)
     // But log the error for investigation
     next();
@@ -144,7 +152,7 @@ export function strictSanitizeInput(
       next();
     });
   } catch (error) {
-    logger.error('Error during strict input sanitization:', error);
+    getLogger().error('Error during strict input sanitization:', error);
     next();
   }
 }
@@ -237,7 +245,7 @@ export function sanitizeWithDetection(
     // Check for malicious content before sanitization
     const checkForMalicious = (data: any, path: string = ''): void => {
       if (typeof data === 'string' && containsMaliciousContent(data)) {
-        logger.warn('Potentially malicious content detected', {
+        getLogger().warn('Potentially malicious content detected:', {
           path,
           ip: req.ip,
           method: req.method,
@@ -263,7 +271,7 @@ export function sanitizeWithDetection(
     // Apply sanitization
     sanitizeInput(req, res, next);
   } catch (error) {
-    logger.error('Error during sanitization with detection:', error);
+    getLogger().error('Error during sanitization with detection:', error);
     next();
   }
 }

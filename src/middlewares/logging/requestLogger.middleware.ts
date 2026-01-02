@@ -1,8 +1,19 @@
 import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 console.log('→ Loading request logger middleware, importing logger...');
-import logger from '../../config/logger.config';
-console.log('✓ Logger imported in request logger middleware');
+
+// Lazy load logger to avoid circular dependency issues
+let logger: any = null;
+function getLogger() {
+  if (!logger) {
+    console.log('→ Lazy loading logger in request logger...');
+    logger = require('../../config/logger.config').default;
+    console.log('✓ Logger lazy loaded in request logger');
+  }
+  return logger;
+}
+
+console.log('✓ Request logger middleware module loaded (logger deferred)');
 
 /**
  * Extended Request interface with requestId
@@ -98,7 +109,7 @@ export function requestLogger(
   const userAgent = req.headers['user-agent'] || 'unknown';
 
   // Log incoming request
-  logger.info('Incoming request', {
+  getLogger().info('Incoming request', {
     requestId,
     method,
     url,
@@ -126,7 +137,7 @@ export function requestLogger(
     }
 
     // Log response
-    logger[logLevel]('Request completed', {
+    getLogger()[logLevel]('Request completed', {
       requestId,
       method,
       url,
@@ -169,7 +180,7 @@ export function detailedRequestLogger(
   const userAgent = req.headers['user-agent'] || 'unknown';
 
   // Log incoming request with body and query
-  logger.info('Incoming request (detailed)', {
+  getLogger().info('Incoming request (detailed)', {
     requestId,
     method,
     url,
@@ -195,7 +206,7 @@ export function detailedRequestLogger(
       logLevel = 'warn';
     }
 
-    logger[logLevel]('Request completed (detailed)', {
+    getLogger()[logLevel]('Request completed (detailed)', {
       requestId,
       method,
       url,
@@ -285,7 +296,7 @@ export function slowRequestLogger(threshold: number = 1000) {
       const duration = Date.now() - (req.startTime || Date.now());
 
       if (duration > threshold) {
-        logger.warn('Slow request detected', {
+        getLogger().warn('Slow request detected', {
           requestId: req.requestId,
           method: req.method,
           url: req.url,
@@ -313,7 +324,7 @@ export function errorRequestLogger(
   res: Response,
   next: NextFunction
 ): void {
-  logger.error('Request error', {
+  getLogger().error('Request error', {
     requestId: req.requestId,
     method: req.method,
     url: req.url,
@@ -338,6 +349,6 @@ export function initializeRequestLogging(): (
   res: Response,
   next: NextFunction
 ) => void {
-  logger.info('✅ Request logging initialized');
+  getLogger().info('✅ Request logging initialized');
   return requestLogger;
 }
