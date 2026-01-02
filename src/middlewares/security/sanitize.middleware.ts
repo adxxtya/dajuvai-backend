@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import DOMPurify from 'isomorphic-dompurify';
+// Removed DOMPurify due to ES module issues on some systems
+// Using validator.escape() which is sufficient for our needs
 import validator from 'validator';
 
 // Lazy load logger to avoid circular dependency
@@ -13,7 +14,7 @@ function getLogger() {
 
 /**
  * Sanitize a single string value
- * Applies both validator.escape() and DOMPurify.sanitize()
+ * Uses validator.escape() to prevent XSS attacks
  * 
  * @param value - String to sanitize
  * @returns Sanitized string
@@ -23,17 +24,8 @@ function sanitizeString(value: string): string {
     return value;
   }
 
-  // First escape HTML entities
-  let sanitized = validator.escape(value);
-
-  // Then apply DOMPurify for additional XSS protection
-  sanitized = DOMPurify.sanitize(sanitized, {
-    ALLOWED_TAGS: [], // Strip all HTML tags
-    ALLOWED_ATTR: [], // Strip all attributes
-    KEEP_CONTENT: true, // Keep text content
-  });
-
-  return sanitized;
+  // Escape HTML entities to prevent XSS
+  return validator.escape(value);
 }
 
 /**
