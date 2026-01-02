@@ -98,16 +98,8 @@ console.log("✓ Uploads directory ready");
 console.log("→ Importing security middleware...");
 import { initializeSecurityHeaders } from "./middlewares/security/securityHeaders.middleware";
 console.log("✓ Security headers middleware imported");
-import { initializeRequestLogging } from "./middlewares/logging/requestLogger.middleware";
-console.log("✓ Request logging middleware imported");
-import { sanitizeInput } from "./middlewares/security/sanitize.middleware";
-console.log("✓ Sanitize middleware imported");
-import { apiRateLimiterMiddleware, initializeRateLimiters } from "./middlewares/auth/rateLimiter.middleware";
-console.log("✓ Rate limiter middleware imported");
-import { requireAdmin } from "./middlewares/auth/authorize.middleware";
-console.log("✓ Authorization middleware imported");
-import { authenticateUser } from "./middlewares/auth/authenticate.middleware";
-console.log("✓ Authentication middleware imported");
+console.log("✓ Deferring other middleware imports");
+
 import logger from "./config/logger.config";
 console.log("✓ Logger imported");
 
@@ -141,7 +133,10 @@ app.use(cors({
 // Compression middleware
 app.use(compression());
 
-// Apply request logging middleware
+// Apply request logging middleware (dynamic import to avoid circular dependency)
+console.log("→ Loading request logging middleware...");
+const { initializeRequestLogging } = require("./middlewares/logging/requestLogger.middleware");
+console.log("✓ Request logging loaded");
 app.use(initializeRequestLogging());
 
 // Middleware to parse JSON request bodies
@@ -150,7 +145,10 @@ app.use(express.json());
 // Middleware to parse URL-encoded request bodies (form submissions)
 app.use(express.urlencoded({ extended: true }));
 
-// Input sanitization middleware
+// Input sanitization middleware (dynamic import)
+console.log("→ Loading sanitize middleware...");
+const { sanitizeInput } = require("./middlewares/security/sanitize.middleware");
+console.log("✓ Sanitize middleware loaded");
 app.use(sanitizeInput);
 
 // Middleware to parse cookies
@@ -171,6 +169,11 @@ app.get("/health", (req: Request, res: Response) => {
 });
 
 // Metrics endpoint (protected by admin auth)
+console.log("→ Loading auth middleware for metrics endpoint...");
+const { authenticateUser } = require("./middlewares/auth/authenticate.middleware");
+const { requireAdmin } = require("./middlewares/auth/authorize.middleware");
+console.log("✓ Auth middleware loaded");
+
 app.get("/metrics", authenticateUser(AppDataSource), requireAdmin(), (req: Request, res: Response) => {
     res.status(200).json({
         success: true,
@@ -231,7 +234,10 @@ AppDataSource.initialize()
     .then(() => {
         logger.info("✅ Database connected successfully");
 
-        // Initialize rate limiters after database connection
+        // Initialize rate limiters after database connection (dynamic import)
+        console.log("→ Loading rate limiters...");
+        const { initializeRateLimiters } = require("./middlewares/auth/rateLimiter.middleware");
+        console.log("✓ Rate limiters loaded");
         initializeRateLimiters();
 
         // Start background cron jobs for token and order cleanup
