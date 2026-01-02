@@ -8,10 +8,11 @@ import { OrderItem } from "../entities/orderItems.entity";
 import { NotificationService } from "../service/notification.service";
 import { Vendor } from "../entities/vendor.entity";
 
-const userDB = AppDataSource.getRepository(User);
-const orderDB = AppDataSource.getRepository(Order);
-const orderItemRepo = AppDataSource.getRepository(OrderItem);
-const vendorRepo = AppDataSource.getRepository(Vendor);
+// Helper functions to get repositories (lazy initialization)
+const getUserRepo = () => AppDataSource.getRepository(User);
+const getOrderRepo = () => AppDataSource.getRepository(Order);
+const getOrderItemRepo = () => AppDataSource.getRepository(OrderItem);
+const getVendorRepo = () => AppDataSource.getRepository(Vendor);
 
 
 /**
@@ -33,6 +34,7 @@ const vendorRepo = AppDataSource.getRepository(Vendor);
 export const tokenCleanUp = () => {
     cron.schedule("*/2 * * * *", async () => { // every 2 minutes
         try {
+            const userDB = getUserRepo();
             // Only select known columns to avoid missing column issues
             const expiredUsers = await userDB.find({
                 select: [
@@ -94,6 +96,7 @@ export const tokenCleanUp = () => {
 export const orderCleanUp = () => {
     cron.schedule("0 */2 * * *", async () => { // runs every 2 hours at minute 0
         try {
+            const orderDB = getOrderRepo();
             const thresholdDate = new Date();
             thresholdDate.setHours(thresholdDate.getHours() - 24); // 24 hours ago
 
@@ -130,6 +133,8 @@ export const startOrderCleanupJob = () => {
         console.log("⏰ [CRON] Checking for unpaid online orders...");
 
         try {
+            const orderDB = getOrderRepo();
+            const orderItemRepo = getOrderItemRepo();
             const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
             console.log(
                 `🕒 [CRON] Cancelling orders created before: ${fifteenMinutesAgo.toISOString()}`
@@ -230,6 +235,7 @@ export const removeUnverifiedVendors = () => {
     // run every 12 hrs 
     cron.schedule("0 0,12 * * *", async () => {
         try {
+            const vendorRepo = getVendorRepo();
             const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
             const result = await vendorRepo.delete({
                 isVerified: false,

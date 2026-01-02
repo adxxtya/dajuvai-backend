@@ -108,10 +108,11 @@ export async function createTestProduct(
   
   const product = productRepository.create({
     name: `Test Product ${Date.now()}`,
-    miniDescription: 'Test product description',
-    longDescription: 'Test product long description',
+    description: 'Test product description',
     basePrice: 1000,
     finalPrice: 1000,
+    discount: 0,
+    discountType: 'PERCENTAGE' as any,
     stock: 100,
     status: InventoryStatus.AVAILABLE,
     hasVariants: false,
