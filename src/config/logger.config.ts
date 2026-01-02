@@ -72,25 +72,35 @@ const consoleTransport = new winston.transports.Console({
 /**
  * File transport for error logs
  */
-const errorFileTransport = new winston.transports.File({
-  filename: join(__dirname, '../../logs/error.log'),
-  level: 'error',
-  format: fileFormat,
-  maxsize: 5 * 1024 * 1024, // 5MB
-  maxFiles: 5,
-  tailable: true,
-});
+let errorFileTransport: winston.transports.FileTransportInstance | null = null;
+try {
+  errorFileTransport = new winston.transports.File({
+    filename: join(__dirname, '../../logs/error.log'),
+    level: 'error',
+    format: fileFormat,
+    maxsize: 5 * 1024 * 1024, // 5MB
+    maxFiles: 5,
+    tailable: true,
+  });
+} catch (error) {
+  console.warn('Warning: Could not create error log file transport:', error);
+}
 
 /**
  * File transport for combined logs
  */
-const combinedFileTransport = new winston.transports.File({
-  filename: join(__dirname, '../../logs/combined.log'),
-  format: fileFormat,
-  maxsize: 5 * 1024 * 1024, // 5MB
-  maxFiles: 5,
-  tailable: true,
-});
+let combinedFileTransport: winston.transports.FileTransportInstance | null = null;
+try {
+  combinedFileTransport = new winston.transports.File({
+    filename: join(__dirname, '../../logs/combined.log'),
+    format: fileFormat,
+    maxsize: 5 * 1024 * 1024, // 5MB
+    maxFiles: 5,
+    tailable: true,
+  });
+} catch (error) {
+  console.warn('Warning: Could not create combined log file transport:', error);
+}
 
 /**
  * Create logs directory if it doesn't exist
@@ -101,19 +111,21 @@ try {
   mkdirSync(logsDir, { recursive: true });
 } catch (error) {
   // Directory already exists or cannot be created
+  // Log to console since logger isn't ready yet
+  console.warn('Warning: Could not create logs directory:', error);
 }
 
 /**
  * Winston logger instance
  */
+const transports: winston.transport[] = [consoleTransport];
+if (errorFileTransport) transports.push(errorFileTransport);
+if (combinedFileTransport) transports.push(combinedFileTransport);
+
 const logger = winston.createLogger({
   level: level(),
   levels,
-  transports: [
-    consoleTransport,
-    errorFileTransport,
-    combinedFileTransport,
-  ],
+  transports,
   // Don't exit on handled exceptions
   exitOnError: false,
 });
@@ -121,26 +133,34 @@ const logger = winston.createLogger({
 /**
  * Handle uncaught exceptions
  */
-logger.exceptions.handle(
-  new winston.transports.File({
-    filename: join(__dirname, '../../logs/exceptions.log'),
-    format: fileFormat,
-    maxsize: 5 * 1024 * 1024,
-    maxFiles: 5,
-  })
-);
+try {
+  logger.exceptions.handle(
+    new winston.transports.File({
+      filename: join(__dirname, '../../logs/exceptions.log'),
+      format: fileFormat,
+      maxsize: 5 * 1024 * 1024,
+      maxFiles: 5,
+    })
+  );
+} catch (error) {
+  console.warn('Warning: Could not create exceptions log file transport:', error);
+}
 
 /**
  * Handle unhandled promise rejections
  */
-logger.rejections.handle(
-  new winston.transports.File({
-    filename: join(__dirname, '../../logs/rejections.log'),
-    format: fileFormat,
-    maxsize: 5 * 1024 * 1024,
-    maxFiles: 5,
-  })
-);
+try {
+  logger.rejections.handle(
+    new winston.transports.File({
+      filename: join(__dirname, '../../logs/rejections.log'),
+      format: fileFormat,
+      maxsize: 5 * 1024 * 1024,
+      maxFiles: 5,
+    })
+  );
+} catch (error) {
+  console.warn('Warning: Could not create rejections log file transport:', error);
+}
 
 /**
  * Stream for Morgan HTTP logger integration

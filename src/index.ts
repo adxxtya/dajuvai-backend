@@ -83,30 +83,50 @@ console.log("✓ V1 routes import SKIPPED for debugging");
 console.log("→ Importing cronjob utils...");
 import { orderCleanUp, removeUnverifiedVendors, startOrderCleanupJob, tokenCleanUp } from "./utils/cronjob.utils";
 console.log("✓ Cronjob utils imported");
+
+console.log("→ Importing error handlers...");
 import { errorHandler, notFoundHandler } from "./middlewares/error/errorHandler.middleware";
+console.log("✓ Error handlers imported");
 
 // Create uploads folder if it doesn't exist to store uploaded files
+console.log("→ Creating uploads directory...");
 const uploadDir = join(__dirname, 'uploads');
 mkdirSync(uploadDir, { recursive: true }); // recursive:true ensures parent dirs are created if needed
+console.log("✓ Uploads directory ready");
 
 // Import security middleware
+console.log("→ Importing security middleware...");
 import { initializeSecurityHeaders } from "./middlewares/security/securityHeaders.middleware";
+console.log("✓ Security headers middleware imported");
 import { initializeRequestLogging } from "./middlewares/logging/requestLogger.middleware";
+console.log("✓ Request logging middleware imported");
 import { sanitizeInput } from "./middlewares/security/sanitize.middleware";
+console.log("✓ Sanitize middleware imported");
 import { apiRateLimiterMiddleware, initializeRateLimiters } from "./middlewares/auth/rateLimiter.middleware";
+console.log("✓ Rate limiter middleware imported");
 import { requireAdmin } from "./middlewares/auth/authorize.middleware";
+console.log("✓ Authorization middleware imported");
 import { authenticateUser } from "./middlewares/auth/authenticate.middleware";
+console.log("✓ Authentication middleware imported");
 import logger from "./config/logger.config";
+console.log("✓ Logger imported");
 
 // Initialize Express app
+console.log("→ Creating Express app...");
 const app = express();
+console.log("✓ Express app created");
 
 // Add Sentry request handlers (must be first middleware)
+console.log("→ Adding Sentry middleware...");
 addSentryMiddleware(app);
+console.log("✓ Sentry middleware added");
 
 // Apply security headers (Helmet and custom headers)
+console.log("→ Initializing security headers...");
 const securityHeaders = initializeSecurityHeaders();
+console.log("✓ Security headers initialized, applying...");
 securityHeaders.forEach(middleware => app.use(middleware));
+console.log("✓ Security headers applied");
 
 // CORS configuration - Allow all origins
 app.use(cors({
