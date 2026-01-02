@@ -119,8 +119,14 @@ try {
  * Winston logger instance
  */
 const transports: winston.transport[] = [consoleTransport];
-if (errorFileTransport) transports.push(errorFileTransport);
-if (combinedFileTransport) transports.push(combinedFileTransport);
+
+// Only add file transports if not explicitly disabled
+if (process.env.DISABLE_FILE_LOGGING !== 'true') {
+  if (errorFileTransport) transports.push(errorFileTransport);
+  if (combinedFileTransport) transports.push(combinedFileTransport);
+} else {
+  console.log('File logging disabled via DISABLE_FILE_LOGGING env var');
+}
 
 const logger = winston.createLogger({
   level: level(),

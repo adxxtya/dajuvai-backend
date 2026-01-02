@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+console.log('→ Loading request logger middleware, importing logger...');
 import logger from '../../config/logger.config';
+console.log('✓ Logger imported in request logger middleware');
 
 /**
  * Extended Request interface with requestId
