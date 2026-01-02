@@ -93,14 +93,18 @@ export function sanitizeInput(
       req.body = sanitizeValue(req.body);
     }
 
-    // Sanitize query parameters
+    // Sanitize query parameters (mutate in place for Express 5 compatibility)
     if (req.query && typeof req.query === 'object') {
-      req.query = sanitizeValue(req.query);
+      const sanitizedQuery = sanitizeValue(req.query);
+      Object.keys(req.query).forEach(key => delete req.query[key]);
+      Object.assign(req.query, sanitizedQuery);
     }
 
-    // Sanitize URL parameters
+    // Sanitize URL parameters (mutate in place for Express 5 compatibility)
     if (req.params && typeof req.params === 'object') {
-      req.params = sanitizeValue(req.params);
+      const sanitizedParams = sanitizeValue(req.params);
+      Object.keys(req.params).forEach(key => delete req.params[key]);
+      Object.assign(req.params, sanitizedParams);
     }
 
     next();
@@ -134,11 +138,15 @@ export function strictSanitizeInput(
       }
 
       if (req.query && typeof req.query === 'object') {
-        req.query = trimWhitespace(req.query);
+        const trimmedQuery = trimWhitespace(req.query);
+        Object.keys(req.query).forEach(key => delete req.query[key]);
+        Object.assign(req.query, trimmedQuery);
       }
 
       if (req.params && typeof req.params === 'object') {
-        req.params = trimWhitespace(req.params);
+        const trimmedParams = trimWhitespace(req.params);
+        Object.keys(req.params).forEach(key => delete req.params[key]);
+        Object.assign(req.params, trimmedParams);
       }
 
       next();

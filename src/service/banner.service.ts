@@ -333,6 +333,7 @@ export class BannerService {
                 "selectedCategory",
                 "selectedSubcategory",
                 "selectedSubcategory.category",
+                "selectedDeal",
             ],
             select: {
                 id: true,
