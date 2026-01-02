@@ -1,8 +1,11 @@
-version: "3"
+version: "3.8"
+
 services:
-  app:
-    image: my-node-app
+  dajuvai-api:
+    container_name: dajuvai-api
+    build: .
     ports:
       - "14001:4000"
-    environment:
-      DATABASE_URL: "postgresql://postgres:TwAgpaWoiXJvub1@postgres16:5432/postgres_dev"
+    env_file:
+      - .env
+    restart: always
