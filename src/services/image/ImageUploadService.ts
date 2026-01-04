@@ -253,17 +253,18 @@ export class ImageUploadService {
    * Requirements: 16.5
    */
   private async validateFile(file: Express.Multer.File): Promise<void> {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const allowedFormats = ['jpeg', 'jpg', 'png', 'webp']; // For Sharp metadata validation
     const maxSize = 5 * 1024 * 1024; // 5MB
 
     if (!file.buffer) {
       throw new APIError(400, 'Invalid file: No buffer found');
     }
 
-    if (!allowedTypes.includes(file.mimetype)) {
+    if (!allowedMimeTypes.includes(file.mimetype)) {
       throw new APIError(
         400,
-        `Invalid file type: ${file.mimetype}. Allowed types: ${allowedTypes.join(', ')}`
+        `Invalid file type: ${file.mimetype}. Allowed types: ${allowedMimeTypes.join(', ')}`
       );
     }
 
@@ -275,7 +276,7 @@ export class ImageUploadService {
     }
 
     // Additional validation using ImageOptimizationService
-    const validation = await this.imageOptimizationService.validateImage(file.buffer, maxSize, allowedTypes);
+    const validation = await this.imageOptimizationService.validateImage(file.buffer, maxSize, allowedFormats);
     if (!validation.valid) {
       throw new APIError(400, validation.error || 'Invalid image file');
     }

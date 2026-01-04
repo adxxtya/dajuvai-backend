@@ -979,9 +979,9 @@ router.post("/request/register", validateZod(vendorSignupSchema), vendorControll
  */
 router.post('/login', validateZod(vendorLoginSchema), vendorController.login.bind(vendorController));
 
-// router.post('/verify/resend', authRateLimiter, validateZod(verificationTokenSchema), vendorController.sendVerificationToken.bind(vendorController));
+router.post('/verify/resend', authRateLimiter, validateZod(verificationTokenSchema), vendorController.sendVerificationToken.bind(vendorController));
 
-// router.post('/verify', validateZod(verifyTokenSchema), vendorController.verifyToken.bind(vendorController));
+router.post('/verify', validateZod(verifyTokenSchema), vendorController.verifyToken.bind(vendorController));
 
 
 // router.post('/forgot-password', authRateLimiter, validateZod(verificationTokenSchema), vendorController.forgotPassword.bind(vendorController));

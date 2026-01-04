@@ -520,6 +520,17 @@ export class ProductController {
 
             const files = req.files as Express.Multer.File[];
 
+            // Log what we received from multer
+            logger.debug('Files received from multer', { 
+                count: files.length,
+                files: files.map(f => ({ 
+                    filename: f.originalname, 
+                    mimetype: f.mimetype,
+                    size: f.size,
+                    fieldname: f.fieldname
+                }))
+            });
+
             // Validate file count (max 10)
             if (files.length > 10) {
                 throw new APIError(400, `Too many files: ${files.length}. Maximum allowed: 10`);
@@ -530,6 +541,12 @@ export class ProductController {
             const maxSize = 5 * 1024 * 1024; // 5MB
 
             for (const file of files) {
+                logger.debug('Received file', { 
+                    filename: file.originalname, 
+                    mimetype: file.mimetype,
+                    size: file.size 
+                });
+
                 if (!allowedTypes.includes(file.mimetype)) {
                     throw new APIError(
                         400,

@@ -101,7 +101,7 @@ const AppDataSource = new DataSource({
     max: 20,
     min: 5,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 10000, // Increased from 2s to 10s to prevent timeout errors
   },
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });

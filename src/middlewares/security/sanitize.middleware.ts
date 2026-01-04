@@ -13,14 +13,58 @@ function getLogger() {
 }
 
 /**
+ * Check if a string is a URL
+ */
+function isURL(value: string): boolean {
+  if (typeof value !== 'string') return false;
+  
+  // Check if it's a valid URL
+  try {
+    // Check for common URL patterns
+    if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('//')) {
+      return true;
+    }
+    // Check if it looks like a Cloudinary URL or other CDN
+    if (value.includes('cloudinary.com') || value.includes('res.cloudinary')) {
+      return true;
+    }
+  } catch (e) {
+    return false;
+  }
+  
+  return false;
+}
+
+/**
+ * Check if a field name suggests it contains a URL
+ */
+function isURLField(fieldName: string): boolean {
+  const urlFieldPatterns = [
+    'url', 'image', 'images', 'photo', 'avatar', 'thumbnail',
+    'productImages', 'variantImages', 'categoryImage', 'bannerImage',
+    'src', 'href', 'link', 'uri'
+  ];
+  
+  const lowerFieldName = fieldName.toLowerCase();
+  return urlFieldPatterns.some(pattern => lowerFieldName.includes(pattern.toLowerCase()));
+}
+
+/**
  * Sanitize a single string value
  * Uses validator.escape() to prevent XSS attacks
+ * Skips URLs to prevent breaking them
  * 
  * @param value - String to sanitize
+ * @param fieldName - Optional field name to check if it's a URL field
  * @returns Sanitized string
  */
-function sanitizeString(value: string): string {
+function sanitizeString(value: string, fieldName?: string): string {
   if (typeof value !== 'string') {
+    return value;
+  }
+
+  // Don't sanitize URLs
+  if (isURL(value) || (fieldName && isURLField(fieldName))) {
     return value;
   }
 
@@ -33,9 +77,10 @@ function sanitizeString(value: string): string {
  * Handles nested objects and arrays
  * 
  * @param data - Data to sanitize (can be object, array, string, or primitive)
+ * @param fieldName - Optional field name for context
  * @returns Sanitized data with same structure
  */
-function sanitizeValue(data: any): any {
+function sanitizeValue(data: any, fieldName?: string): any {
   // Handle null and undefined
   if (data === null || data === undefined) {
     return data;
@@ -43,12 +88,12 @@ function sanitizeValue(data: any): any {
 
   // Handle strings
   if (typeof data === 'string') {
-    return sanitizeString(data);
+    return sanitizeString(data, fieldName);
   }
 
   // Handle arrays
   if (Array.isArray(data)) {
-    return data.map((item) => sanitizeValue(item));
+    return data.map((item) => sanitizeValue(item, fieldName));
   }
 
   // Handle objects
@@ -57,9 +102,9 @@ function sanitizeValue(data: any): any {
 
     for (const key in data) {
       if (Object.prototype.hasOwnProperty.call(data, key)) {
-        // Sanitize the key as well (prevent prototype pollution)
-        const sanitizedKey = sanitizeString(key);
-        sanitized[sanitizedKey] = sanitizeValue(data[key]);
+        // Don't sanitize the key if it's a URL field
+        const sanitizedKey = isURLField(key) ? key : sanitizeString(key);
+        sanitized[sanitizedKey] = sanitizeValue(data[key], key);
       }
     }
 
@@ -93,18 +138,38 @@ export function sanitizeInput(
       req.body = sanitizeValue(req.body);
     }
 
-    // Sanitize query parameters (mutate in place for Express 5 compatibility)
+    // Sanitize query parameters
+    // In Express 5, req.query is read-only, so we need to sanitize in place
     if (req.query && typeof req.query === 'object') {
       const sanitizedQuery = sanitizeValue(req.query);
-      Object.keys(req.query).forEach(key => delete req.query[key]);
-      Object.assign(req.query, sanitizedQuery);
+      // Delete existing keys and add sanitized ones
+      for (const key in req.query) {
+        if (Object.prototype.hasOwnProperty.call(req.query, key)) {
+          delete (req.query as any)[key];
+        }
+      }
+      for (const key in sanitizedQuery) {
+        if (Object.prototype.hasOwnProperty.call(sanitizedQuery, key)) {
+          (req.query as any)[key] = sanitizedQuery[key];
+        }
+      }
     }
 
-    // Sanitize URL parameters (mutate in place for Express 5 compatibility)
+    // Sanitize URL parameters
+    // In Express 5, req.params is read-only, so we need to sanitize in place
     if (req.params && typeof req.params === 'object') {
       const sanitizedParams = sanitizeValue(req.params);
-      Object.keys(req.params).forEach(key => delete req.params[key]);
-      Object.assign(req.params, sanitizedParams);
+      // Delete existing keys and add sanitized ones
+      for (const key in req.params) {
+        if (Object.prototype.hasOwnProperty.call(req.params, key)) {
+          delete (req.params as any)[key];
+        }
+      }
+      for (const key in sanitizedParams) {
+        if (Object.prototype.hasOwnProperty.call(sanitizedParams, key)) {
+          (req.params as any)[key] = sanitizedParams[key];
+        }
+      }
     }
 
     next();
@@ -139,14 +204,32 @@ export function strictSanitizeInput(
 
       if (req.query && typeof req.query === 'object') {
         const trimmedQuery = trimWhitespace(req.query);
-        Object.keys(req.query).forEach(key => delete req.query[key]);
-        Object.assign(req.query, trimmedQuery);
+        // Delete existing keys and add trimmed ones
+        for (const key in req.query) {
+          if (Object.prototype.hasOwnProperty.call(req.query, key)) {
+            delete (req.query as any)[key];
+          }
+        }
+        for (const key in trimmedQuery) {
+          if (Object.prototype.hasOwnProperty.call(trimmedQuery, key)) {
+            (req.query as any)[key] = trimmedQuery[key];
+          }
+        }
       }
 
       if (req.params && typeof req.params === 'object') {
         const trimmedParams = trimWhitespace(req.params);
-        Object.keys(req.params).forEach(key => delete req.params[key]);
-        Object.assign(req.params, trimmedParams);
+        // Delete existing keys and add trimmed ones
+        for (const key in req.params) {
+          if (Object.prototype.hasOwnProperty.call(req.params, key)) {
+            delete (req.params as any)[key];
+          }
+        }
+        for (const key in trimmedParams) {
+          if (Object.prototype.hasOwnProperty.call(trimmedParams, key)) {
+            (req.params as any)[key] = trimmedParams[key];
+          }
+        }
       }
 
       next();

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
 import { fetchAllUser, createUser, findUserByEmail, findUserByEmailLogin, findUserByResetToken, getUserByIdService, updateUserService, saveUser, findVendorByEmail, saveVendor, findVendorByResetToken, getAllStaff, deleteStaffById, findUserById, updateStaffById } from '../service/user.service';
 import { ISignupRequest, ILoginRequest, IVerificationTokenRequest, IVerifyTokenRequest, IResetPasswordRequest, IChangeEmailRequest, IVerifyEmailChangeRequest, IUpdateUserRequest } from '../interface/user.interface';
 import { signupSchema, loginSchema, verificationTokenSchema, verifyTokenSchema, resetPasswordSchema, changeEmailSchema, verifyEmailChangeSchema, updateUserSchema } from '../utils/zod_validations/user.zod';
@@ -48,6 +49,7 @@ class TokenUtils {
 export class UserController {
     private readonly jwtSecret: string;
     private vendorService: VendorService;
+    private googleClient: OAuth2Client;
 
     /**
       * @constructor
@@ -56,6 +58,7 @@ export class UserController {
     constructor() {
         this.jwtSecret = process.env.JWT_SECRET || 'your_jwt_secret';
         this.vendorService = new VendorService();
+        this.googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
     }
 
     /**
@@ -638,6 +641,112 @@ export class UserController {
 
     toLowerEmail(email: string): string {
         return email.toLowerCase()
+    }
+
+    /**
+     * @method googleTokenAuth
+     * @route POST /auth/google/token
+     * @description Authenticates a user using Google ID token from mobile app
+     * @param {Request} req - Express request with idToken in body
+     * @param {Response} res - Express response object
+     * @returns {Promise<void>} Responds with user data and JWT token
+     * @access Public
+     */
+    async googleTokenAuth(req: Request, res: Response): Promise<void> {
+        try {
+            const { idToken } = req.body;
+
+            if (!idToken) {
+                throw new APIError(400, 'ID token is required');
+            }
+
+            // Verify the Google ID token
+            const ticket = await this.googleClient.verifyIdToken({
+                idToken,
+                audience: process.env.GOOGLE_CLIENT_ID,
+            });
+
+            const payload = ticket.getPayload();
+            if (!payload || !payload.email) {
+                throw new APIError(401, 'Invalid Google token');
+            }
+
+            const { sub: googleId, email, name } = payload;
+            const loweredEmail = this.toLowerEmail(email);
+
+            const userRepo = AppDataSource.getRepository(User);
+
+            // Check if user exists with Google ID
+            let user = await userRepo.findOne({
+                where: { googleId },
+            });
+
+            if (!user) {
+                // Check if user exists with this email
+                user = await userRepo.findOne({
+                    where: { email: loweredEmail },
+                });
+
+                if (user) {
+                    // User exists with email but different provider
+                    if (user.provider !== AuthProvider.GOOGLE) {
+                        throw new APIError(400, 'This email is registered manually. Please log in using your email and password.');
+                    }
+
+                    // Update user with Google ID
+                    user.googleId = googleId;
+                    user.isVerified = true;
+                    user.provider = AuthProvider.GOOGLE;
+                    await userRepo.save(user);
+                } else {
+                    // Create new user
+                    user = userRepo.create({
+                        googleId,
+                        email: loweredEmail,
+                        username: name || email.split('@')[0],
+                        isVerified: true,
+                        provider: AuthProvider.GOOGLE,
+                        role: UserRole.USER,
+                    });
+                    await userRepo.save(user);
+                }
+            }
+
+            // Generate JWT
+            const token = jwt.sign(
+                { id: user.id, email: user.email, role: user.role },
+                this.jwtSecret,
+                { expiresIn: '2h' }
+            );
+
+            // Set cookie
+            res.cookie('token', token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'strict',
+                maxAge: 2 * 60 * 60 * 1000,
+            });
+
+            // Response
+            res.status(200).json({
+                success: true,
+                token,
+                data: {
+                    userId: user.id,
+                    email: user.email,
+                    username: user.username,
+                    role: user.role,
+                },
+            });
+
+        } catch (error) {
+            if (error instanceof APIError) {
+                res.status(error.status).json({ success: false, message: error.message });
+            } else {
+                console.error('Google token auth error:', error);
+                res.status(503).json({ success: false, message: 'Google authentication failed' });
+            }
+        }
     }
 
 

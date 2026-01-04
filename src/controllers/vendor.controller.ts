@@ -10,6 +10,7 @@ import {
     IVerificationTokenRequest,
     IResetPasswordRequest,
     IUpdateVendorRequest,
+    IVerifyTokenRequest,
 } from '../interface/vendor.interface';
 import {
     vendorSignupSchema,
@@ -17,6 +18,7 @@ import {
     verificationTokenSchema,
     resetPasswordSchema,
     updateVendorSchema,
+    verifyTokenSchema,
 } from '../utils/zod_validations/vendor.zod';
 import { APIError } from '../utils/ApiError.utils';
 import { DistrictService } from '../service/district.service';
@@ -287,6 +289,73 @@ export class VendorController {
     }
 
     /**
+     * POST /vendor/verify
+     * Verifies vendor email using the 6-digit token sent via email.
+     *
+     * @param {VendorAuthRequest<{}, {}, IVerifyTokenRequest>} req - Verify token request
+     * @param {Response} res - Express response object
+     * @returns {Promise<void>} - Responds with success message
+     * @access Public
+     */
+    async verifyToken(req: VendorAuthRequest<{}, {}, IVerifyTokenRequest>, res: Response): Promise<void> {
+        try {
+            /* Validate request body */
+            const parsed = verifyTokenSchema.safeParse(req.body);
+            if (!parsed.success) {
+                res.status(400).json({ success: false, errors: parsed.error.errors });
+                return;
+            }
+
+            const { email, token } = parsed.data;
+
+            /* Find vendor by email */
+            const vendor = await this.vendorService.findVendorByEmail(email);
+            if (!vendor) {
+                throw new APIError(404, 'Vendor not found');
+            }
+
+            /* Check if already verified */
+            if (vendor.isVerified) {
+                throw new APIError(400, 'Email already verified');
+            }
+
+            /* Check if token exists */
+            if (!vendor.verificationCode || !vendor.verificationCodeExpire) {
+                throw new APIError(400, 'No verification token found. Please request a new one.');
+            }
+
+            /* Check if token expired */
+            if (new Date() > vendor.verificationCodeExpire) {
+                throw new APIError(410, 'Verification token has expired. Please request a new one.');
+            }
+
+            /* Verify token */
+            const isValidToken = await bcrypt.compare(token, vendor.verificationCode);
+            if (!isValidToken) {
+                throw new APIError(400, 'Invalid verification token');
+            }
+
+            /* Update vendor verification status */
+            vendor.isVerified = true;
+            vendor.verificationCode = null;
+            vendor.verificationCodeExpire = null;
+            await this.vendorService.saveVendor(vendor);
+
+            res.status(200).json({
+                success: true,
+                message: 'Email verified successfully',
+                isApproved: vendor.isApproved,
+            });
+        } catch (error) {
+            if (error instanceof APIError) {
+                res.status(error.status).json({ success: false, message: error.message });
+            } else {
+                throw new APIError(503, 'Verification service temporarily unavailable');
+            }
+        }
+    }
+
+    /**
      * POST /vendor/login
      * Authenticates a vendor and issues a JWT.
      *
@@ -309,6 +378,11 @@ export class VendorController {
             const vendor = await this.vendorService.findVendorByEmailLogin(email);
             if (!vendor) {
                 throw new APIError(401, 'Vendor does not exist');
+            }
+
+            /* Check if email is verified */
+            if (!vendor.isVerified) {
+                throw new APIError(403, 'Please verify your email before logging in');
             }
 
             if (!vendor.isApproved) {

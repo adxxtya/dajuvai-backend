@@ -894,6 +894,45 @@ userRouter.post('/login', validateZod(loginSchema), userController.login.bind(us
  */
 userRouter.get('/google', passport.authenticate('google', { scope: ['email', 'profile'] }));
 
+/**
+ * @swagger
+ * /api/auth/google/token:
+ *   post:
+ *     summary: Google token authentication for mobile apps
+ *     description: Authenticates user using Google ID token from mobile app
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - idToken
+ *             properties:
+ *               idToken:
+ *                 type: string
+ *                 description: Google ID token from mobile app
+ *     responses:
+ *       200:
+ *         description: Authentication successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 token:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       400:
+ *         description: Invalid token or email already registered
+ *       401:
+ *         description: Invalid Google token
+ */
+userRouter.post('/google/token', userController.googleTokenAuth.bind(userController));
 
 userRouter.get('/google/callback',
     passport.authenticate('google', {
