@@ -715,7 +715,9 @@ export class ProductService {
     async getProductsByVendorId(
         vendorId: number,
         page: number,
-        limit: number
+        limit: number,
+        search?: string,
+        sort?: string
     ): Promise<{ products: Product[]; total: number }> {
         // Verify vendor existence via vendor service
         const vendor = await this.vendorService.findVendorById(vendorId);
@@ -723,16 +725,70 @@ export class ProductService {
             throw new APIError(404, 'Vendor not found');
         }
 
+        console.log('Search parameter received:', search);
+        console.log('Sort parameter received:', sort);
+
         // Calculate number of records to skip based on pagination parameters
         const skip = (page - 1) * limit;
 
-        // Find products with vendor relation filtered by vendorId, paginated with total count
-        const [products, total] = await this.productRepository.findAndCount({
-            where: { vendor: { id: vendorId } },
-            relations: ['subcategory', 'vendor', "variants"],
-            skip,
-            take: limit,
-        });
+        // Build query with search and sort
+        const queryBuilder = this.productRepository
+            .createQueryBuilder('product')
+            .leftJoinAndSelect('product.subcategory', 'subcategory')
+            .leftJoinAndSelect('product.vendor', 'vendor')
+            .leftJoinAndSelect('product.variants', 'variants')
+            .where('product.vendorId = :vendorId', { vendorId });
+
+        // Add search filter
+        if (search && search.trim()) {
+            const searchTerm = `%${search.trim()}%`;
+            console.log('Applying search filter with term:', searchTerm);
+            queryBuilder.andWhere(
+                '(LOWER(product.name) LIKE LOWER(:search) OR LOWER(product.description) LIKE LOWER(:search))',
+                { search: searchTerm }
+            );
+        }
+
+        // Add sorting
+        switch (sort) {
+            case 'name_asc':
+                queryBuilder.orderBy('product.name', 'ASC');
+                break;
+            case 'name_desc':
+                queryBuilder.orderBy('product.name', 'DESC');
+                break;
+            case 'price_asc':
+                queryBuilder.orderBy('product.basePrice', 'ASC');
+                break;
+            case 'price_desc':
+                queryBuilder.orderBy('product.basePrice', 'DESC');
+                break;
+            case 'stock_asc':
+                queryBuilder.orderBy('product.stock', 'ASC');
+                break;
+            case 'stock_desc':
+                queryBuilder.orderBy('product.stock', 'DESC');
+                break;
+            case 'newest':
+                queryBuilder.orderBy('product.created_at', 'DESC');
+                break;
+            case 'oldest':
+                queryBuilder.orderBy('product.created_at', 'ASC');
+                break;
+            default:
+                queryBuilder.orderBy('product.created_at', 'DESC');
+        }
+
+        // Apply pagination
+        queryBuilder.skip(skip).take(limit);
+
+        // Log the generated SQL for debugging
+        console.log('Generated SQL:', queryBuilder.getSql());
+        console.log('Query parameters:', queryBuilder.getParameters());
+
+        const [products, total] = await queryBuilder.getManyAndCount();
+
+        console.log(`Found ${total} products matching criteria`);
 
         return { products, total };
     }
@@ -749,5 +805,59 @@ export class ProductService {
         await this.cacheService.del(`product:${id}`);
         // Invalidate all product list caches
         await this.cacheService.invalidatePattern('products:list:*');
+    }
+
+    async generateProductsExcel(products: Product[]): Promise<Buffer> {
+        const ExcelJS = require('exceljs');
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Products');
+
+        // Define columns
+        worksheet.columns = [
+            { header: 'ID', key: 'id', width: 10 },
+            { header: 'Name', key: 'name', width: 30 },
+            { header: 'Description', key: 'description', width: 50 },
+            { header: 'Base Price', key: 'basePrice', width: 15 },
+            { header: 'Discount', key: 'discount', width: 12 },
+            { header: 'Discount Type', key: 'discountType', width: 15 },
+            { header: 'Final Price', key: 'finalPrice', width: 15 },
+            { header: 'Stock', key: 'stock', width: 10 },
+            { header: 'Status', key: 'status', width: 15 },
+            { header: 'Has Variants', key: 'hasVariants', width: 15 },
+            { header: 'Vendor', key: 'vendor', width: 25 },
+            { header: 'Brand', key: 'brand', width: 20 },
+            { header: 'Created At', key: 'createdAt', width: 20 },
+        ];
+
+        // Add rows
+        products.forEach(product => {
+            worksheet.addRow({
+                id: product.id,
+                name: product.name,
+                description: product.description,
+                basePrice: product.basePrice,
+                discount: product.discount,
+                discountType: product.discountType,
+                finalPrice: product.finalPrice,
+                stock: product.stock,
+                status: product.status,
+                hasVariants: product.hasVariants ? 'Yes' : 'No',
+                vendor: product.vendor?.businessName || 'N/A',
+                brand: product.brandId || 'N/A',
+                createdAt: product.created_at,
+            });
+        });
+
+        // Style header row
+        worksheet.getRow(1).font = { bold: true };
+        worksheet.getRow(1).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFE0E0E0' }
+        };
+
+        // Generate buffer
+        const buffer = await workbook.xlsx.writeBuffer();
+        return Buffer.from(buffer);
     }
 }

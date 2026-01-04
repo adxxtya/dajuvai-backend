@@ -261,21 +261,24 @@ export class ProductController {
 
 
     async getProductsByVendorId(
-        req: Request<{ vendorId: string }, {}, {}, { page: string, limit: string }>,
+        req: Request<{ vendorId: string }, {}, {}, { page: string, limit: string, search?: string, sort?: string }>,
         res: Response
     ) {
         try {
             // Extract vendor ID from route parameters
             const { vendorId } = req.params;
+            const { search, sort } = req.query;
 
             // Parse pagination parameters using PaginationHelper
             const paginationParams = PaginationHelper.parsePaginationParams(req.query);
 
-            // Fetch paginated products for specific vendor
+            // Fetch paginated products for specific vendor with search and sort
             const { products, total } = await this.productService.getProductsByVendorId(
                 Number(vendorId),
                 paginationParams.page,
-                paginationParams.limit
+                paginationParams.limit,
+                search,
+                sort
             );
 
             const product = await this.returnProuctRatings(products);
@@ -597,6 +600,55 @@ export class ProductController {
             } else {
                 logger.error('Image upload error:', error);
                 res.status(500).json({ success: false, message: 'Image upload failed' });
+            }
+        }
+    }
+
+    /**
+     * @method exportVendorProductsToExcel
+     * @route GET /vendors/:vendorId/products/export
+     * @description Exports all products for a specific vendor to Excel format
+     * @param {Request<{ vendorId: string }>} req - Express request with vendor ID in URL params
+     * @param {Response} res - Express response object
+     * @returns {Promise<void>} Responds with Excel file download
+     * @access Vendor/Admin
+     */
+    async exportVendorProductsToExcel(
+        req: Request<{ vendorId: string }>,
+        res: Response
+    ) {
+        try {
+            const { vendorId } = req.params;
+            
+            // Get all products for the vendor (no pagination)
+            const { products } = await this.productService.getProductsByVendorId(
+                Number(vendorId),
+                1,
+                10000 // Large limit to get all products
+            );
+
+            // Generate Excel file
+            const excelBuffer = await this.productService.generateProductsExcel(products);
+
+            // Set response headers for file download
+            res.setHeader(
+                'Content-Type',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            );
+            res.setHeader(
+                'Content-Disposition',
+                `attachment; filename=products_${vendorId}_${Date.now()}.xlsx`
+            );
+            res.setHeader('Content-Length', excelBuffer.length);
+
+            // Send the Excel file
+            res.send(excelBuffer);
+        } catch (error) {
+            if (error instanceof APIError) {
+                res.status(error.status).json({ success: false, message: error.message });
+            } else {
+                console.error('exportVendorProductsToExcel error:', error);
+                res.status(500).json({ success: false, message: 'Failed to export products' });
             }
         }
     }

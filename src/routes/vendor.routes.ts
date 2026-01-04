@@ -289,10 +289,62 @@ router.get("/unapprove/list", authMiddleware, isAdminOrStaff, vendorController.g
 
 /**
  * @swagger
+ * /api/vendors/{vendorId}/products/export:
+ *   get:
+ *     summary: Export vendor products to Excel
+ *     description: Downloads all products for a specific vendor as an Excel file
+ *     tags: [Vendors]
+ *     parameters:
+ *       - in: path
+ *         name: vendorId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID of the vendor
+ *         example: 12
+ *     responses:
+ *       200:
+ *         description: Excel file download
+ *         content:
+ *           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       404:
+ *         description: Vendor not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Vendor not found"
+ *       500:
+ *         description: Failed to export products
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Failed to export products"
+ */
+router.get('/:vendorId/products/export', productController.exportVendorProductsToExcel.bind(productController));
+
+/**
+ * @swagger
  * /api/vendors/{vendorId}/products:
  *   get:
  *     summary: Get products by vendor ID
- *     description: Retrieves paginated products belonging to a specific vendor.
+ *     description: Retrieves paginated products belonging to a specific vendor with optional search and sorting.
  *     tags: [Vendors]
  *     parameters:
  *       - in: path
@@ -316,6 +368,22 @@ router.get("/unapprove/list", authMiddleware, isAdminOrStaff, vendorController.g
  *           type: integer
  *           default: 10
  *         description: Number of products per page
+ *       - in: query
+ *         name: search
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Search query to filter products by name or description
+ *         example: "laptop"
+ *       - in: query
+ *         name: sort
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [newest, oldest, name_asc, name_desc, price_asc, price_desc, stock_asc, stock_desc]
+ *           default: newest
+ *         description: Sort order for products
+ *         example: "price_asc"
  *     responses:
  *       200:
  *         description: List of products for the given vendor

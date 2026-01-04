@@ -11,7 +11,9 @@ import { UserRole } from '../entities/user.entity';
 const userRouter = Router();
 const userController = new UserController();
 
-const frontendUrl = process.env.FRONTEND_URL || 'https://dajuvai.com';
+const frontendUrl = process.env.NODE_ENV === 'production' 
+    ? (process.env.PRODUCTION_FRONTEND_URL || 'https://dajuvai-next-frontend.vercel.app')
+    : (process.env.FRONTEND_URL || 'http://localhost:3000');
 
 
 // Rate limiter for sensitive endpoints
