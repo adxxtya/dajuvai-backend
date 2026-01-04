@@ -26,8 +26,12 @@ const envSchema = z.object({
   // OAuth Configuration
   GOOGLE_CLIENT_ID: z.string().min(1, 'GOOGLE_CLIENT_ID is required'),
   GOOGLE_CLIENT_SECRET: z.string().min(1, 'GOOGLE_CLIENT_SECRET is required'),
+  GOOGLE_CALLBACK_URL: z.string().url('GOOGLE_CALLBACK_URL must be a valid URL').optional(),
   FACEBOOK_APP_ID: z.string().min(1, 'FACEBOOK_APP_ID is required'),
   FACEBOOK_APP_SECRET: z.string().min(1, 'FACEBOOK_APP_SECRET is required'),
+
+  // Backend Configuration
+  BACKEND_URL: z.string().url('BACKEND_URL must be a valid URL').optional(),
 
   // Cloudinary Configuration
   CLOUDINARY_CLOUD_NAME: z.string().min(1, 'CLOUDINARY_CLOUD_NAME is required'),
