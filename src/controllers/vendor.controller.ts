@@ -375,10 +375,19 @@ export class VendorController {
 
             /* Verify vendor credentials */
             const { email, password } = parsed.data;
+            console.log('🔍 Login attempt - Email received:', email);
+            console.log('🔍 Login attempt - Email length:', email.length);
+            console.log('🔍 Login attempt - Email trimmed:', email.trim());
+            
             const vendor = await this.vendorService.findVendorByEmailLogin(email);
+            console.log('🔍 Vendor found:', vendor ? 'YES' : 'NO');
+            
             if (!vendor) {
+                console.log('❌ Vendor not found in database for email:', email);
                 throw new APIError(401, 'Vendor does not exist');
             }
+            
+            console.log('✅ Vendor found:', { id: vendor.id, email: vendor.email, isVerified: vendor.isVerified, isApproved: vendor.isApproved });
 
             /* Check if email is verified */
             if (!vendor.isVerified) {

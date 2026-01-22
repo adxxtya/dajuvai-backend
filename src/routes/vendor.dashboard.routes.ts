@@ -318,5 +318,64 @@ vendorDashBoardRouter.get("/analytics/revenue-by-category", vendorAuthMiddleware
 
 vendorDashBoardRouter.get("/analytics/revenue-by-sub-category", vendorAuthMiddleware, vendorDashboardController.getRevenueBySubcategoryForVendor.bind(vendorDashboardController));
 
+/**
+ * @swagger
+ * /api/vendor/dashboard/analytics/sales-trend:
+ *   get:
+ *     summary: Get vendor's sales trend over time
+ *     description: |
+ *       Fetch sales trend data for the authenticated vendor grouped by day, week, or month.
+ *       Returns time-series data showing sales over the specified period.
+ *     tags:
+ *       - Vendor Dashboard
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: period
+ *         schema:
+ *           type: string
+ *           enum: [daily, weekly, monthly]
+ *           default: daily
+ *         required: false
+ *         description: Time period grouping for sales data
+ *       - in: query
+ *         name: days
+ *         schema:
+ *           type: integer
+ *           default: 7
+ *         required: false
+ *         description: Number of days to look back from today
+ *     responses:
+ *       200:
+ *         description: Sales trend data retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       date:
+ *                         type: string
+ *                         format: date
+ *                         example: "2025-01-10"
+ *                       sales:
+ *                         type: number
+ *                         format: float
+ *                         example: 5420.50
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Internal server error
+ */
+vendorDashBoardRouter.get("/analytics/sales-trend", vendorAuthMiddleware, vendorDashboardController.getSalesTrend.bind(vendorDashboardController));
+
 
 export default vendorDashBoardRouter;

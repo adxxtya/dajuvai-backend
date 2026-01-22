@@ -203,4 +203,29 @@ export class VendorDashboardController {
             }
         }
     }
+
+    async getSalesTrend(req: VendorAuthRequest<{}, {}, {}, { period?: 'daily' | 'weekly' | 'monthly', days?: string }>, res: Response): Promise<void> {
+        try {
+            const vendor = req.vendor;
+            if (!vendor || !vendor.id) {
+                throw new APIError(401, 'Unauthorized');
+            }
+
+            const { period = 'daily', days = '7' } = req.query;
+            const daysNum = parseInt(days, 10) || 7;
+
+            const salesTrend = await this.dashboardService.getSalesTrend(vendor.id, period, daysNum);
+            res.status(200).json({
+                success: true,
+                data: salesTrend
+            });
+        } catch (error) {
+            console.log(error);
+            if (error instanceof APIError) {
+                res.status(error.status).json({ success: false, message: error.message });
+            } else {
+                res.status(500).json({ success: false, message: 'Internal server error' });
+            }
+        }
+    }
 }

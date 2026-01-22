@@ -276,4 +276,47 @@ export class VendorDashBoardService {
         }));
     }
 
+    async getSalesTrend(vendorId: number, period: 'daily' | 'weekly' | 'monthly' = 'daily', days: number = 7) {
+        const qb = AppDataSource.getRepository(OrderItem)
+            .createQueryBuilder("oi")
+            .innerJoin("oi.order", "o")
+            .where("oi.vendorId = :vendorId", { vendorId })
+            .andWhere("o.paymentStatus = :paymentStatus", { paymentStatus: "PAID" });
+
+        // Calculate date range
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - days);
+
+        qb.andWhere("o.createdAt BETWEEN :startDate AND :endDate", { 
+            startDate: startDate.toISOString(), 
+            endDate: endDate.toISOString() 
+        });
+
+        // Group by date based on period
+        if (period === 'daily') {
+            qb.select("DATE(o.createdAt)", "date")
+                .addSelect("SUM(oi.price * oi.quantity)", "sales")
+                .groupBy("DATE(o.createdAt)")
+                .orderBy("DATE(o.createdAt)", "ASC");
+        } else if (period === 'weekly') {
+            qb.select("DATE_TRUNC('week', o.createdAt)", "date")
+                .addSelect("SUM(oi.price * oi.quantity)", "sales")
+                .groupBy("DATE_TRUNC('week', o.createdAt)")
+                .orderBy("DATE_TRUNC('week', o.createdAt)", "ASC");
+        } else if (period === 'monthly') {
+            qb.select("DATE_TRUNC('month', o.createdAt)", "date")
+                .addSelect("SUM(oi.price * oi.quantity)", "sales")
+                .groupBy("DATE_TRUNC('month', o.createdAt)")
+                .orderBy("DATE_TRUNC('month', o.createdAt)", "ASC");
+        }
+
+        const result = await qb.getRawMany();
+
+        return result.map(r => ({
+            date: r.date,
+            sales: parseFloat(r.sales || 0),
+        }));
+    }
+
 }

@@ -7,9 +7,6 @@ export class Variant {
     @PrimaryGeneratedColumn()
     id: string;
 
-    @VersionColumn()
-    version: number;
-
     @Column({ type: 'varchar', length: 100 })
     sku: string;
 

@@ -13,6 +13,7 @@ import AppDataSource from '../config/db.config';
 import { VendorService } from '../service/vendor.service';
 import { PaginationHelper } from '../utils/helpers/PaginationHelper';
 import { ResponseBuilder } from '../utils/helpers/ResponseBuilder';
+import logger from '../config/logger.config';
 
 /**
  * @class TokenUtils
@@ -1215,8 +1216,7 @@ export class UserController {
         res: Response
     ): Promise<void> {
         try {
-            console.log(req.user)
-            console.log(req.body)
+            logger.debug('Email change request received', { user: req.user, body: req.body });
             // Validate request body using Zod schema
             const parsed = changeEmailSchema.safeParse(req.body);
             if (!parsed.success) {
@@ -1272,7 +1272,7 @@ export class UserController {
             if (error instanceof APIError) {
                 res.status(error.status).json({ success: false, message: error.message });
             } else {
-                console.log(error)
+                logger.error('Email change error', { error });
                 throw new APIError(503, 'Email change service temporarily unavailable');
             }
         }

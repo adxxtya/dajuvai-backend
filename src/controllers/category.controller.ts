@@ -4,6 +4,7 @@ import { createCategorySchema, updateCategorySchema } from '../utils/zod_validat
 import { CategoryService } from '../service/category.service';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { APIError } from '../utils/ApiError.utils';
+import logger from '../config/logger.config';
 
 /**
  * @class CategoryController
@@ -98,8 +99,13 @@ export class CategoryController {
                 throw new APIError(400, "search querry is required");
             }
 
+            logger.debug('Searching categories', { name, userId: user.id });
+
             // Search categories via service
             const category = await this.categoryService.searchCategoryByName(name);
+            
+            logger.info('Categories search completed', { name, resultCount: category.length });
+            
             // Send success response
             res.status(200).json({
                 success: true,
@@ -108,10 +114,11 @@ export class CategoryController {
         } catch (error) {
             // Handle known API errors
             if (error instanceof APIError) {
+                logger.error('Search categories API error', { error: error.message, status: error.status });
                 res.status(error.status).json({ success: false, message: error.message });
             } else {
                 // Log unexpected errors
-                console.error('Search categories error:', error);
+                logger.error('Search categories error', { error });
                 res.status(500).json({ success: false, message: 'Internal server error' });
             }
         }

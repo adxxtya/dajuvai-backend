@@ -42,9 +42,6 @@ export class Product {
     @Index()
     stock?: number;
 
-    @VersionColumn()
-    version: number;
-
     @ManyToOne(() => Subcategory, { onDelete: "SET NULL" })
     @JoinColumn({ name: "subcategoryId" })
     subcategory: Subcategory;

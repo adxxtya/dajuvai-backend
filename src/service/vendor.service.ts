@@ -88,18 +88,30 @@ export class VendorService {
                 verificationCodeExpire,
             } = vendorSignupData;
 
-            // ✅ Prevent duplicate vendors
-            const existing = await this.vendorRepository.findOne({ where: { email } });
-            if (existing) throw new APIError(409, "Vendor already exists");
+            // ✅ Normalize email (trim and lowercase)
+            const normalizedEmail = email.trim().toLowerCase();
+            console.log('🔍 CreateVendor: Original email:', email);
+            console.log('🔍 CreateVendor: Normalized email:', normalizedEmail);
+
+            // ✅ Prevent duplicate vendors (case-insensitive check)
+            const existing = await this.vendorRepository
+                .createQueryBuilder('vendor')
+                .where('LOWER(vendor.email) = LOWER(:email)', { email: normalizedEmail })
+                .getOne();
+            
+            if (existing) {
+                console.log('❌ CreateVendor: Vendor already exists with email:', normalizedEmail);
+                throw new APIError(409, "Vendor already exists");
+            }
 
             // ✅ Ensure district exists
             const districtEntity = await this.districtService.findDistrictByName(district);
             if (!districtEntity) throw new APIError(400, "District does not exist");
 
-            // ✅ Create vendor entity
+            // ✅ Create vendor entity with normalized email
             const vendor = this.vendorRepository.create({
                 businessName,
-                email,
+                email: normalizedEmail, // Store normalized email
                 password,
                 phoneNumber,
                 telePhone,
@@ -121,7 +133,9 @@ export class VendorService {
                 isApproved: false,
             });
 
-            return await this.vendorRepository.save(vendor);
+            const savedVendor = await this.vendorRepository.save(vendor);
+            console.log('✅ CreateVendor: Vendor created successfully with id:', savedVendor.id);
+            return savedVendor;
         } catch (error) {
             throw new Error(`Failed to create vendor: ${error.message}`);
         }
@@ -142,8 +156,19 @@ export class VendorService {
      * @returns {Promise<Vendor | null>} The vendor entity or null if not found.
      */
     async findVendorByEmailLogin(email: string): Promise<Vendor | null> {
-        // Same as findVendorByEmail - can customize if login logic differs later
-        return await this.vendorRepository.findOne({ where: { email } });
+        // Trim whitespace and convert to lowercase for case-insensitive matching
+        const normalizedEmail = email.trim().toLowerCase();
+        console.log('🔍 VendorService: Searching for email:', normalizedEmail);
+        
+        // Use LOWER() function for case-insensitive search
+        const vendor = await this.vendorRepository
+            .createQueryBuilder('vendor')
+            .where('LOWER(vendor.email) = LOWER(:email)', { email: normalizedEmail })
+            .leftJoinAndSelect('vendor.district', 'district')
+            .getOne();
+        
+        console.log('🔍 VendorService: Vendor found:', vendor ? `YES (id: ${vendor.id})` : 'NO');
+        return vendor;
     }
 
     /**

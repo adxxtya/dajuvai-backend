@@ -80,14 +80,15 @@ export class ProductController {
         res: Response
     ): Promise<void> {
         try {
-            console.log('BODY:', req.body);
-            console.log('HEADERS:', req.headers['content-type']);
+            logger.debug('Create product request', { 
+                body: req.body, 
+                contentType: req.headers['content-type'],
+                vendorId: req.vendor.id 
+            });
 
             const data: ProductInterface = req.body;
             const categoryId = Number(req.params.categoryId);
             const subcategoryId = Number(req.params.subcategoryId);
-
-            console.log(data)
 
             if (data.hasVariants === 'true' && (!data.variants || !Array.isArray(data.variants))) {
                 throw new APIError(400, 'Variants array is required for variant products');
@@ -100,6 +101,13 @@ export class ProductController {
                 Number(req.vendor.id)
             );
 
+            logger.info('Product created successfully', { 
+                productId: savedProduct.id, 
+                vendorId: req.vendor.id,
+                categoryId,
+                subcategoryId
+            });
+
             res.status(201).json({
                 success: true,
                 message: 'Product created successfully',
@@ -107,9 +115,10 @@ export class ProductController {
             });
         } catch (error) {
             if (error instanceof APIError) {
+                logger.error('Create product API error', { error: error.message, status: error.status });
                 res.status(error.status).json({ success: false, message: error.message });
             } else {
-                console.error('createProduct error:', error);
+                logger.error('Create product error', { error });
                 res.status(500).json({ success: false, message: 'Internal Server Error' });
             }
         }
@@ -126,9 +135,13 @@ export class ProductController {
             const categoryId = Number(req.params.categoryId);
             const subcategoryId = Number(req.params.subcategoryId);
 
-            console.log("___________Product id _____________________")
-            console.log(data)
-            console.log(productId)
+            logger.debug('Update product request', { 
+                productId, 
+                data, 
+                categoryId, 
+                subcategoryId,
+                vendorId: req.vendor?.id 
+            });
 
             const vendorId = await this.productService.getVendorIdByProductId(Number(productId));
 
@@ -141,6 +154,8 @@ export class ProductController {
                 subcategoryId
             );
 
+            logger.info('Product updated successfully', { productId, vendorId: req.vendor?.id });
+
             res.status(200).json({
                 success: true,
                 message: 'Product updated successfully',
@@ -148,9 +163,10 @@ export class ProductController {
             });
         } catch (error) {
             if (error instanceof APIError) {
+                logger.error('Update product API error', { error: error.message, status: error.status });
                 res.status(error.status).json({ success: false, message: error.message });
             } else {
-                console.error('updateProduct error:', error);
+                logger.error('Update product error', { error });
                 res.status(500).json({ success: false, message: 'Internal Server Error' });
             }
         }
@@ -177,7 +193,7 @@ export class ProductController {
 
     async getAllProducts(req: Request, res: Response) {
         try {
-            console.log("Query params:", req.query);
+            logger.debug('Get all products request', { query: req.query });
 
             // Parse pagination parameters using PaginationHelper
             const paginationParams = PaginationHelper.parsePaginationParams(req.query);
@@ -215,12 +231,19 @@ export class ProductController {
                 }
             );
 
+            logger.info('Get all products completed', { 
+                total: result.total, 
+                page, 
+                limit 
+            });
+
             return res.status(200).json(response);
         } catch (error) {
             if (error instanceof APIError) {
+                logger.error('Get products API error', { error: error.message, status: error.status });
                 res.status(error.status).json({ success: false, message: error.message });
             } else {
-                console.error("getProducts error:", error);
+                logger.error('Get products error', { error });
                 res.status(500).json({ success: false, message: "Internal Server Error" });
             }
         }
@@ -239,8 +262,11 @@ export class ProductController {
 
             // Return 404 if product doesn't exist
             if (!product) {
+                logger.warn('Product not found', { productId: id, subcategoryId });
                 return res.status(404).json({ success: false, message: 'Product not found' });
             }
+
+            logger.info('Product retrieved successfully', { productId: id });
 
             res.status(200).json({
                 success: true,
@@ -249,10 +275,11 @@ export class ProductController {
         } catch (error) {
             // Handle API errors with specific status codes
             if (error instanceof APIError) {
+                logger.error('Get product by ID API error', { error: error.message, status: error.status });
                 res.status(error.status).json({ success: false, message: error.message });
             } else {
                 // Log unexpected errors for debugging
-                console.error('getProductById error:', error);
+                logger.error('Get product by ID error', { error });
                 res.status(500).json({ success: false, message: 'Internal Server Error' });
             }
         }
@@ -307,10 +334,11 @@ export class ProductController {
         } catch (error) {
             // Handle API errors with specific status codes
             if (error instanceof APIError) {
+                logger.error('Get products by vendor ID API error', { error: error.message, status: error.status });
                 res.status(error.status).json({ success: false, message: error.message });
             } else {
                 // Log unexpected errors for debugging
-                console.error('getProductsByVendorId error:', error);
+                logger.error('Get products by vendor ID error', { error });
                 res.status(500).json({ success: false, message: 'Internal Server Error' });
             }
         }
@@ -332,10 +360,11 @@ export class ProductController {
         } catch (error) {
             // Handle API errors with specific status codes
             if (error instanceof APIError) {
+                logger.error('Delete product API error', { error: error.message, status: error.status });
                 res.status(error.status).json({ success: false, message: error.message });
             } else {
                 // Log unexpected errors for debugging
-                console.error('deleteProduct error:', error);
+                logger.error('Delete product error', { error });
                 res.status(500).json({ success: false, message: 'Internal Server Error' });
             }
         }
@@ -410,30 +439,29 @@ export class ProductController {
 
     async deleteProductById(req: Request<{ id: string }>, res: Response) {
         try {
-            console.log("[deleteProductById] Request params:", req.params);
+            logger.debug('Delete product by ID request', { params: req.params });
 
             const id = Number(req.params.id);
-            console.log("[deleteProductById] Parsed product ID:", id);
 
             if (isNaN(id)) {
-                console.warn("[deleteProductById] Invalid product ID");
+                logger.warn('Invalid product ID', { id: req.params.id });
                 return res.status(400).json({
                     success: false,
                     msg: "Invalid product ID"
                 });
             }
 
-            console.log("[deleteProductById] Calling productService.deleteProductById...");
+            logger.debug('Calling productService.deleteProductById', { productId: id });
             const deleteProduct = await this.productService.deleteProductById(id);
-            console.log("[deleteProductById] deleteProduct result:", deleteProduct);
+
+            logger.info('Product deleted successfully', { productId: id });
 
             res.status(200).json({
                 success: true,
                 msg: "Product deleted successfully"
             });
-            console.log("[deleteProductById] Response sent successfully");
         } catch (error) {
-            console.error("[deleteProductById] Error caught:", error);
+            logger.error('Delete product by ID error', { error });
 
             if (error instanceof APIError) {
                 res.status(error.status).json({ success: false, msg: error.message });
@@ -455,18 +483,16 @@ export class ProductController {
      */
     async getAdminProducts(req: AuthRequest<{}, {}, {}, IAdminProductQueryParams>, res: Response) {
         try {
-            console.log("----------------------Admin product api hit--------------------")
-            console.log("----------Req params--------------")
-            console.log(req.params);
-            console.log(req.query)
+            logger.debug('Get admin products request', { 
+                params: req.params, 
+                query: req.query 
+            });
 
             // Parse pagination parameters
             const paginationParams = PaginationHelper.parsePaginationParams(req.query);
 
             // Fetch paginated products with admin-specific filtering
             const { products, total } = await this.productService.getAdminProducts(req.query);
-
-            // console.log(products)
 
             // Build paginated response
             const paginatedResponse = PaginationHelper.buildResponse(
@@ -488,14 +514,20 @@ export class ProductController {
                 }
             );
 
+            logger.info('Admin products retrieved successfully', { 
+                total, 
+                page: paginationParams.page, 
+                limit: paginationParams.limit 
+            });
+
             res.status(200).json(response);
         } catch (error) {
-            console.log(error)
             // Handle API errors with specific status codes
             if (error instanceof APIError) {
+                logger.error('Get admin products API error', { error: error.message, status: error.status });
                 res.status(error.status).json({ success: false, message: error.message });
             } else {
-                console.log(error)
+                logger.error('Get admin products error', { error });
                 // Handle unexpected errors with generic 500 response
                 res.status(500).json({ success: false, message: 'Internal server error' });
             }
@@ -645,9 +677,10 @@ export class ProductController {
             res.send(excelBuffer);
         } catch (error) {
             if (error instanceof APIError) {
+                logger.error('Export vendor products API error', { error: error.message, status: error.status });
                 res.status(error.status).json({ success: false, message: error.message });
             } else {
-                console.error('exportVendorProductsToExcel error:', error);
+                logger.error('Export vendor products to Excel error', { error });
                 res.status(500).json({ success: false, message: 'Failed to export products' });
             }
         }
