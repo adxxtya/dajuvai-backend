@@ -44,9 +44,12 @@ export class BannerService {
         });
 
         // Schedule cron job to auto-update banner statuses every 5 hours
-        cron.schedule('0 */5 * * *', async () => {
-            await this.updateBannerStatuses();
-        });
+        // Skip cron job initialization in test environment
+        if (process.env.NODE_ENV !== 'test') {
+            cron.schedule('0 */5 * * *', async () => {
+                await this.updateBannerStatuses();
+            });
+        }
     }
 
     /**

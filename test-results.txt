@@ -1,0 +1,819 @@
+﻿
+> dajuvai@1.0.0 test
+> jest orders.test.ts --testTimeout=90000
+
+≡ƒº¬ Global test setup starting...
+≡ƒôè Test database: postgresql://postgres:TwAgpaWoiXJvub1@103.250.133.25:5432/dajuvai_test
+Γ£à Test database connected
+Γ£à Test database schema synchronized
+Γ£à Global test setup complete
+  console.log
+    ≡ƒöº Starting order test setup...
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:53:13)
+
+  console.log
+      ΓåÆ Connecting to test database...
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:56:13)
+
+  console.log
+    Γ£à Database safety check passed: Using test database "dajuvai_test"
+
+      at TestDatabase.validateTestDatabase (src/__tests__/setup/testDatabase.ts:108:13)
+
+  console.log
+    Γ£à Test database connected successfully
+
+      at TestDatabase.connect (src/__tests__/setup/testDatabase.ts:142:17)
+
+  console.log
+    Γ£à Test database schema synchronized
+
+      at TestDatabase.connect (src/__tests__/setup/testDatabase.ts:146:17)
+
+  console.log
+      Γ£ô Test database ready
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:60:13)
+
+  console.log
+      ΓåÆ Initializing helpers and factory...
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:63:13)
+
+  console.log
+      Γ£ô Helpers and factory ready
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:66:13)
+
+  console.log
+      ΓåÆ Initializing order service...
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:69:13)
+
+  console.log
+      Γ£ô Order service ready
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:71:13)
+
+  console.log
+      ΓåÆ Creating Express app...
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:74:13)
+
+  console.log
+      Γ£ô Express app ready
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:88:13)
+
+  console.log
+    Γ£à Order test setup complete
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:89:13)
+
+  console.warn
+    ΓÜá∩╕Å  No JWT config found for role: VENDOR. Using default USER config.
+
+    [0m [90m 87 |[39m   
+     [90m 88 |[39m   [36mif[39m ([33m![39mconfig) {
+    [31m[1m>[22m[39m[90m 89 |[39m     console[33m.[39mwarn([32m`ΓÜá∩╕Å  No JWT config found for role: ${role}. Using default USER config.`[39m)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 90 |[39m     [36mreturn[39m [33mJWT_CONFIG[39m[[33mUSER_ROLES[39m[33m.[39m[33mUSER[39m][33m;[39m
+     [90m 91 |[39m   }
+     [90m 92 |[39m   [0m
+
+      at getTokenConfig (src/config/jwt.config.ts:89:13)
+      at TestHelpers.generateVendorAuthToken (src/__tests__/setup/testHelpers.ts:542:34)
+      at TestHelpers.createAuthenticatedVendor (src/__tests__/setup/testHelpers.ts:250:24)
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:115:26)
+
+  console.warn
+    ΓÜá∩╕Å  No JWT config found for role: VENDOR. Using default USER config.
+
+    [0m [90m 87 |[39m   
+     [90m 88 |[39m   [36mif[39m ([33m![39mconfig) {
+    [31m[1m>[22m[39m[90m 89 |[39m     console[33m.[39mwarn([32m`ΓÜá∩╕Å  No JWT config found for role: ${role}. Using default USER config.`[39m)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 90 |[39m     [36mreturn[39m [33mJWT_CONFIG[39m[[33mUSER_ROLES[39m[33m.[39m[33mUSER[39m][33m;[39m
+     [90m 91 |[39m   }
+     [90m 92 |[39m   [0m
+
+      at getTokenConfig (src/config/jwt.config.ts:89:13)
+      at TestHelpers.generateVendorAuthToken (src/__tests__/setup/testHelpers.ts:542:34)
+      at TestHelpers.createAuthenticatedVendor (src/__tests__/setup/testHelpers.ts:250:24)
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:378:46)
+
+  console.warn
+    ΓÜá∩╕Å  No JWT config found for role: VENDOR. Using default USER config.
+
+    [0m [90m 87 |[39m   
+     [90m 88 |[39m   [36mif[39m ([33m![39mconfig) {
+    [31m[1m>[22m[39m[90m 89 |[39m     console[33m.[39mwarn([32m`ΓÜá∩╕Å  No JWT config found for role: ${role}. Using default USER config.`[39m)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 90 |[39m     [36mreturn[39m [33mJWT_CONFIG[39m[[33mUSER_ROLES[39m[33m.[39m[33mUSER[39m][33m;[39m
+     [90m 91 |[39m   }
+     [90m 92 |[39m   [0m
+
+      at getTokenConfig (src/config/jwt.config.ts:89:13)
+      at TestHelpers.generateVendorAuthToken (src/__tests__/setup/testHelpers.ts:542:34)
+      at TestHelpers.createAuthenticatedVendor (src/__tests__/setup/testHelpers.ts:250:24)
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:560:28)
+
+  console.warn
+    ΓÜá∩╕Å  No JWT config found for role: VENDOR. Using default USER config.
+
+    [0m [90m 87 |[39m   
+     [90m 88 |[39m   [36mif[39m ([33m![39mconfig) {
+    [31m[1m>[22m[39m[90m 89 |[39m     console[33m.[39mwarn([32m`ΓÜá∩╕Å  No JWT config found for role: ${role}. Using default USER config.`[39m)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 90 |[39m     [36mreturn[39m [33mJWT_CONFIG[39m[[33mUSER_ROLES[39m[33m.[39m[33mUSER[39m][33m;[39m
+     [90m 91 |[39m   }
+     [90m 92 |[39m   [0m
+
+      at getTokenConfig (src/config/jwt.config.ts:89:13)
+      at TestHelpers.generateVendorAuthToken (src/__tests__/setup/testHelpers.ts:542:34)
+      at TestHelpers.createAuthenticatedVendor (src/__tests__/setup/testHelpers.ts:250:24)
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:560:28)
+
+  console.warn
+    ΓÜá∩╕Å  No JWT config found for role: VENDOR. Using default USER config.
+
+    [0m [90m 87 |[39m   
+     [90m 88 |[39m   [36mif[39m ([33m![39mconfig) {
+    [31m[1m>[22m[39m[90m 89 |[39m     console[33m.[39mwarn([32m`ΓÜá∩╕Å  No JWT config found for role: ${role}. Using default USER config.`[39m)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 90 |[39m     [36mreturn[39m [33mJWT_CONFIG[39m[[33mUSER_ROLES[39m[33m.[39m[33mUSER[39m][33m;[39m
+     [90m 91 |[39m   }
+     [90m 92 |[39m   [0m
+
+      at getTokenConfig (src/config/jwt.config.ts:89:13)
+      at TestHelpers.generateVendorAuthToken (src/__tests__/setup/testHelpers.ts:542:34)
+      at TestHelpers.createAuthenticatedVendor (src/__tests__/setup/testHelpers.ts:250:24)
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:560:28)
+
+  console.warn
+    ΓÜá∩╕Å  No JWT config found for role: VENDOR. Using default USER config.
+
+    [0m [90m 87 |[39m   
+     [90m 88 |[39m   [36mif[39m ([33m![39mconfig) {
+    [31m[1m>[22m[39m[90m 89 |[39m     console[33m.[39mwarn([32m`ΓÜá∩╕Å  No JWT config found for role: ${role}. Using default USER config.`[39m)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 90 |[39m     [36mreturn[39m [33mJWT_CONFIG[39m[[33mUSER_ROLES[39m[33m.[39m[33mUSER[39m][33m;[39m
+     [90m 91 |[39m   }
+     [90m 92 |[39m   [0m
+
+      at getTokenConfig (src/config/jwt.config.ts:89:13)
+      at TestHelpers.generateVendorAuthToken (src/__tests__/setup/testHelpers.ts:542:34)
+      at TestHelpers.createAuthenticatedVendor (src/__tests__/setup/testHelpers.ts:250:24)
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:560:28)
+
+  console.warn
+    ΓÜá∩╕Å  No JWT config found for role: VENDOR. Using default USER config.
+
+    [0m [90m 87 |[39m   
+     [90m 88 |[39m   [36mif[39m ([33m![39mconfig) {
+    [31m[1m>[22m[39m[90m 89 |[39m     console[33m.[39mwarn([32m`ΓÜá∩╕Å  No JWT config found for role: ${role}. Using default USER config.`[39m)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 90 |[39m     [36mreturn[39m [33mJWT_CONFIG[39m[[33mUSER_ROLES[39m[33m.[39m[33mUSER[39m][33m;[39m
+     [90m 91 |[39m   }
+     [90m 92 |[39m   [0m
+
+      at getTokenConfig (src/config/jwt.config.ts:89:13)
+      at TestHelpers.generateVendorAuthToken (src/__tests__/setup/testHelpers.ts:542:34)
+      at TestHelpers.createAuthenticatedVendor (src/__tests__/setup/testHelpers.ts:250:24)
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:560:28)
+
+  console.warn
+    ΓÜá∩╕Å  No JWT config found for role: VENDOR. Using default USER config.
+
+    [0m [90m 87 |[39m   
+     [90m 88 |[39m   [36mif[39m ([33m![39mconfig) {
+    [31m[1m>[22m[39m[90m 89 |[39m     console[33m.[39mwarn([32m`ΓÜá∩╕Å  No JWT config found for role: ${role}. Using default USER config.`[39m)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 90 |[39m     [36mreturn[39m [33mJWT_CONFIG[39m[[33mUSER_ROLES[39m[33m.[39m[33mUSER[39m][33m;[39m
+     [90m 91 |[39m   }
+     [90m 92 |[39m   [0m
+
+      at getTokenConfig (src/config/jwt.config.ts:89:13)
+      at TestHelpers.generateVendorAuthToken (src/__tests__/setup/testHelpers.ts:542:34)
+      at TestHelpers.createAuthenticatedVendor (src/__tests__/setup/testHelpers.ts:250:24)
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:560:28)
+
+  console.warn
+    ΓÜá∩╕Å  No JWT config found for role: VENDOR. Using default USER config.
+
+    [0m [90m 87 |[39m   
+     [90m 88 |[39m   [36mif[39m ([33m![39mconfig) {
+    [31m[1m>[22m[39m[90m 89 |[39m     console[33m.[39mwarn([32m`ΓÜá∩╕Å  No JWT config found for role: ${role}. Using default USER config.`[39m)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 90 |[39m     [36mreturn[39m [33mJWT_CONFIG[39m[[33mUSER_ROLES[39m[33m.[39m[33mUSER[39m][33m;[39m
+     [90m 91 |[39m   }
+     [90m 92 |[39m   [0m
+
+      at getTokenConfig (src/config/jwt.config.ts:89:13)
+      at TestHelpers.generateVendorAuthToken (src/__tests__/setup/testHelpers.ts:542:34)
+      at TestHelpers.createAuthenticatedVendor (src/__tests__/setup/testHelpers.ts:250:24)
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:560:28)
+
+  console.warn
+    ΓÜá∩╕Å  No JWT config found for role: VENDOR. Using default USER config.
+
+    [0m [90m 87 |[39m   
+     [90m 88 |[39m   [36mif[39m ([33m![39mconfig) {
+    [31m[1m>[22m[39m[90m 89 |[39m     console[33m.[39mwarn([32m`ΓÜá∩╕Å  No JWT config found for role: ${role}. Using default USER config.`[39m)[33m;[39m
+     [90m    |[39m             [31m[1m^[22m[39m
+     [90m 90 |[39m     [36mreturn[39m [33mJWT_CONFIG[39m[[33mUSER_ROLES[39m[33m.[39m[33mUSER[39m][33m;[39m
+     [90m 91 |[39m   }
+     [90m 92 |[39m   [0m
+
+      at getTokenConfig (src/config/jwt.config.ts:89:13)
+      at TestHelpers.generateVendorAuthToken (src/__tests__/setup/testHelpers.ts:542:34)
+      at TestHelpers.createAuthenticatedVendor (src/__tests__/setup/testHelpers.ts:250:24)
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:560:28)
+
+  console.log
+    ≡ƒº╣ Starting order test cleanup...
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:93:13)
+
+  console.log
+      ΓÜá∩╕Å  Table vendors does not exist, skipping cleanup
+
+      at TestHelpers.deleteEntities (src/__tests__/setup/testHelpers.ts:691:17)
+
+  console.error
+      Γ£ù Failed to delete from addresses: QueryFailedError: current transaction is aborted, commands ignored until end of transaction block
+        at PostgresQueryRunner.query (C:\Brojects\dajuvai\backend\src\driver\postgres\PostgresQueryRunner.ts:328:19)
+        at processTicksAndRejections (node:internal/process/task_queues:95:5)
+        at TestHelpers.deleteEntities (C:\Brojects\dajuvai\backend\src\__tests__\setup\testHelpers.ts:687:7)
+        at TestHelpers.cleanupTestData (C:\Brojects\dajuvai\backend\src\__tests__\setup\testHelpers.ts:621:7)
+        at Object.<anonymous> (C:\Brojects\dajuvai\backend\src\__tests__\integration\orders.test.ts:96:5) {
+      query: 'DELETE FROM "addresses" WHERE id IN ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
+      parameters: [
+        107, 108, 109, 110,
+        111, 112, 113, 114,
+        115, 116, 117, 118
+      ],
+      driverError: error: current transaction is aborted, commands ignored until end of transaction block
+          at C:\Brojects\dajuvai\backend\node_modules\pg\lib\client.js:545:17
+          at processTicksAndRejections (node:internal/process/task_queues:95:5)
+          at PostgresQueryRunner.query (C:\Brojects\dajuvai\backend\src\driver\postgres\PostgresQueryRunner.ts:257:25)
+          at TestHelpers.deleteEntities (C:\Brojects\dajuvai\backend\src\__tests__\setup\testHelpers.ts:687:7)
+          at TestHelpers.cleanupTestData (C:\Brojects\dajuvai\backend\src\__tests__\setup\testHelpers.ts:621:7)
+          at Object.<anonymous> (C:\Brojects\dajuvai\backend\src\__tests__\integration\orders.test.ts:96:5) {
+        length: 145,
+        severity: 'ERROR',
+        code: '25P02',
+        detail: undefined,
+        hint: undefined,
+        position: undefined,
+        internalPosition: undefined,
+        internalQuery: undefined,
+        where: undefined,
+        schema: undefined,
+        table: undefined,
+        column: undefined,
+        dataType: undefined,
+        constraint: undefined,
+        file: 'postgres.c',
+        line: '1498',
+        routine: 'exec_parse_message'
+      },
+      length: 145,
+      severity: 'ERROR',
+      code: '25P02',
+      detail: undefined,
+      hint: undefined,
+      position: undefined,
+      internalPosition: undefined,
+      internalQuery: undefined,
+      where: undefined,
+      schema: undefined,
+      table: undefined,
+      column: undefined,
+      dataType: undefined,
+      constraint: undefined,
+      file: 'postgres.c',
+      line: '1498',
+      routine: 'exec_parse_message'
+    }
+
+    [0m [90m 692 |[39m         [36mreturn[39m[33m;[39m
+     [90m 693 |[39m       }
+    [31m[1m>[22m[39m[90m 694 |[39m       console[33m.[39merror([32m`  Γ£ù Failed to delete from ${tableName}:`[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 695 |[39m       [36mthrow[39m error[33m;[39m
+     [90m 696 |[39m     }
+     [90m 697 |[39m   }[0m
+
+      at TestHelpers.deleteEntities (src/__tests__/setup/testHelpers.ts:694:15)
+      at TestHelpers.cleanupTestData (src/__tests__/setup/testHelpers.ts:621:7)
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:96:5)
+
+  console.error
+    Γ¥î Cleanup failed: QueryFailedError: current transaction is aborted, commands ignored until end of transaction block
+        at PostgresQueryRunner.query (C:\Brojects\dajuvai\backend\src\driver\postgres\PostgresQueryRunner.ts:328:19)
+        at processTicksAndRejections (node:internal/process/task_queues:95:5)
+        at TestHelpers.deleteEntities (C:\Brojects\dajuvai\backend\src\__tests__\setup\testHelpers.ts:687:7)
+        at TestHelpers.cleanupTestData (C:\Brojects\dajuvai\backend\src\__tests__\setup\testHelpers.ts:621:7)
+        at Object.<anonymous> (C:\Brojects\dajuvai\backend\src\__tests__\integration\orders.test.ts:96:5) {
+      query: 'DELETE FROM "addresses" WHERE id IN ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
+      parameters: [
+        107, 108, 109, 110,
+        111, 112, 113, 114,
+        115, 116, 117, 118
+      ],
+      driverError: error: current transaction is aborted, commands ignored until end of transaction block
+          at C:\Brojects\dajuvai\backend\node_modules\pg\lib\client.js:545:17
+          at processTicksAndRejections (node:internal/process/task_queues:95:5)
+          at PostgresQueryRunner.query (C:\Brojects\dajuvai\backend\src\driver\postgres\PostgresQueryRunner.ts:257:25)
+          at TestHelpers.deleteEntities (C:\Brojects\dajuvai\backend\src\__tests__\setup\testHelpers.ts:687:7)
+          at TestHelpers.cleanupTestData (C:\Brojects\dajuvai\backend\src\__tests__\setup\testHelpers.ts:621:7)
+          at Object.<anonymous> (C:\Brojects\dajuvai\backend\src\__tests__\integration\orders.test.ts:96:5) {
+        length: 145,
+        severity: 'ERROR',
+        code: '25P02',
+        detail: undefined,
+        hint: undefined,
+        position: undefined,
+        internalPosition: undefined,
+        internalQuery: undefined,
+        where: undefined,
+        schema: undefined,
+        table: undefined,
+        column: undefined,
+        dataType: undefined,
+        constraint: undefined,
+        file: 'postgres.c',
+        line: '1498',
+        routine: 'exec_parse_message'
+      },
+      length: 145,
+      severity: 'ERROR',
+      code: '25P02',
+      detail: undefined,
+      hint: undefined,
+      position: undefined,
+      internalPosition: undefined,
+      internalQuery: undefined,
+      where: undefined,
+      schema: undefined,
+      table: undefined,
+      column: undefined,
+      dataType: undefined,
+      constraint: undefined,
+      file: 'postgres.c',
+      line: '1498',
+      routine: 'exec_parse_message'
+    }
+
+    [0m [90m 653 |[39m         console[33m.[39merror([32m'Γ¥î Rollback failed:'[39m[33m,[39m rollbackError)[33m;[39m
+     [90m 654 |[39m       }
+    [31m[1m>[22m[39m[90m 655 |[39m       console[33m.[39merror([32m'Γ¥î Cleanup failed:'[39m[33m,[39m error)[33m;[39m
+     [90m     |[39m               [31m[1m^[22m[39m
+     [90m 656 |[39m       [90m// Don't throw - allow tests to continue[39m
+     [90m 657 |[39m     } [36mfinally[39m {
+     [90m 658 |[39m       [90m// Always release the query runner[39m[0m
+
+      at TestHelpers.cleanupTestData (src/__tests__/setup/testHelpers.ts:655:15)
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:96:5)
+
+  console.log
+      Γ£ô Test data cleaned
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:97:13)
+
+  console.log
+    Γ£à Test database disconnected successfully
+
+      at TestDatabase.disconnect (src/__tests__/setup/testDatabase.ts:167:17)
+
+  console.log
+      Γ£ô Database disconnected
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:101:13)
+
+  console.log
+    Γ£à Order test cleanup complete
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:103:13)
+
+npm : FAIL src/__tests__/integration/orders.test.ts (59.728 s)
+At line:1 char:1
++ npm test -- orders.test.ts --testTimeout=90000 2>&1 | Out-File -FileP ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (FAIL src/__test...t.ts (59.728 s):Strin 
+   g) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  Order API Endpoints (V1)
+    POST /api/v1/orders - Create Order
+      ΓêÜ should create an order from cart items (4307 ms)
+      ΓêÜ should reject order creation without authentication (26 ms)
+      ΓêÜ should reject order creation with missing required fields (448 ms)
+    GET /api/v1/orders/:orderId - Get Order Details
+      ├ù should retrieve order details by ID (521 ms)
+      ΓêÜ should return 404 for non-existent order (532 ms)
+    GET /api/v1/orders - List Customer Orders
+      ├ù should retrieve customer orders with pagination (910 ms)
+      ├ù should require admin or staff role for order listing (447 ms)
+    PUT /api/v1/orders/admin/:orderId/status - Update Order Status
+      ├ù should update order status (804 ms)
+      ├ù should reject status update without admin authentication (519 ms)
+    GET /api/v1/orders/payment/success - Payment Success Callback
+      ├ù should handle payment success callback (518 ms)
+    GET /api/v1/orders/payment/cancel - Payment Cancel Callback
+      ├ù should handle payment cancel callback (517 ms)
+    GET /api/v1/orders/vendor/orders - Vendor Orders
+      ├ù should retrieve orders filtered by vendor (519 ms)
+      ├ù should reject vendor orders without vendor authentication (292 ms)
+    GET /api/v1/orders/admin/:orderId - Admin Order Details
+      ├ù should retrieve order details for admin (793 ms)
+    GET /api/v1/orders/user/track - Order Tracking
+      ├ù should track order by ID (521 ms)
+    Order with Different Payment Methods
+      ├ù should create order with Cash on Delivery (1394 ms)
+      ├ù should create order with eSewa payment (1394 ms)
+      ├ù should create order with Khalti payment (1365 ms)
+    Property 18: Order Creation from Cart
+      ├ù should create orders from cart with matching items (10 iterations) (30016 
+ms)
+    Property 19: Order Status Transitions
+      ├ù should persist order status updates (10 iterations) (1043 ms)
+    Property 20: Payment Status Updates
+      ├ù should update payment status on success callback (10 iterations) (502 ms)
+
+  ΓùÅ Order API Endpoints (V1) ΓÇ║ GET /api/v1/orders/:orderId - Get Order Details 
+ΓÇ║ should retrieve order details by ID
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+    [0m [90m 221 |[39m         
+[33m.[39m[36mset[39m([32m'Authorization'[39m[33m,[39m [32m`Bearer 
+${token}`[39m)[33m;[39m
+     [90m 222 |[39m
+    [31m[1m>[22m[39m[90m 223 |[39m       
+expect(response[33m.[39mstatus)[33m.[39mtoBe([35m200[39m)[33m;[39m
+     [90m     |[39m                               [31m[1m^[22m[39m
+     [90m 224 |[39m       expect(response[33m.[39mbody[33m.[39msuccess)[33m.[
+39mtoBe([36mtrue[39m)[33m;[39m
+     [90m 225 |[39m       
+expect(response[33m.[39mbody[33m.[39mdata)[33m.[39mtoBeDefined()[33m;[39m
+     [90m 226 |[39m       expect(response[33m.[39mbody[33m.[39mdata[33m.[39mi
+d)[33m.[39mtoBe(order[33m.[39mid)[33m;[39m[0m
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:223:31)
+
+  ΓùÅ Order API Endpoints (V1) ΓÇ║ GET /api/v1/orders - List Customer Orders ΓÇ║ 
+should retrieve customer orders with pagination
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 500
+
+    [0m [90m 258 |[39m         [33m.[39mquery({ page[33m:[39m 
+[35m1[39m[33m,[39m limit[33m:[39m [35m10[39m })[33m;[39m
+     [90m 259 |[39m
+    [31m[1m>[22m[39m[90m 260 |[39m       
+expect(response[33m.[39mstatus)[33m.[39mtoBe([35m200[39m)[33m;[39m
+     [90m     |[39m                               [31m[1m^[22m[39m
+     [90m 261 |[39m       expect(response[33m.[39mbody[33m.[39msuccess)[33m.[
+39mtoBe([36mtrue[39m)[33m;[39m
+     [90m 262 |[39m       
+expect(response[33m.[39mbody[33m.[39mdata)[33m.[39mtoBeDefined()[33m;[39m
+     [90m 263 |[39m       expect([33mArray[39m[33m.[39misArray(response[33m.[
+39mbody[33m.[39mdata))[33m.[39mtoBe([36mtrue[39m)[33m;[39m[0m
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:260:31)
+
+  ΓùÅ Order API Endpoints (V1) ΓÇ║ GET /api/v1/orders - List Customer Orders ΓÇ║ 
+should require admin or staff role for order listing
+
+    expect(received).toContain(expected) // indexOf
+
+    Expected value: 500
+    Received array: [200, 403]
+
+    [0m [90m 275 |[39m
+     [90m 276 |[39m       [90m// Regular users cannot access this endpoint 
+(admin/staff only)[39m
+    [31m[1m>[22m[39m[90m 277 |[39m       expect([[35m200[39m[33m,[39m 
+[35m403[39m])[33m.[39mtoContain(response[33m.[39mstatus)[33m;[39m
+     [90m     |[39m                          [31m[1m^[22m[39m
+     [90m 278 |[39m     })[33m;[39m
+     [90m 279 |[39m   })[33m;[39m
+     [90m 280 |[39m[0m
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:277:26)
+
+  ΓùÅ Order API Endpoints (V1) ΓÇ║ PUT /api/v1/orders/admin/:orderId/status - Update 
+Order Status ΓÇ║ should update order status
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+    [0m [90m 298 |[39m         [33m.[39msend(updateData)[33m;[39m
+     [90m 299 |[39m
+    [31m[1m>[22m[39m[90m 300 |[39m       
+expect(response[33m.[39mstatus)[33m.[39mtoBe([35m200[39m)[33m;[39m
+     [90m     |[39m                               [31m[1m^[22m[39m
+     [90m 301 |[39m       expect(response[33m.[39mbody[33m.[39msuccess)[33m.[
+39mtoBe([36mtrue[39m)[33m;[39m
+     [90m 302 |[39m       expect(response[33m.[39mbody[33m.[39mdata[33m.[39ms
+tatus)[33m.[39mtoBe([33mOrderStatus[39m[33m.[39m[33mSHIPPED[39m)[33m;[39m
+     [90m 303 |[39m     })[33m;[39m[0m
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:300:31)
+
+  ΓùÅ Order API Endpoints (V1) ΓÇ║ PUT /api/v1/orders/admin/:orderId/status - Update 
+Order Status ΓÇ║ should reject status update without admin authentication
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 404
+
+    [0m [90m 319 |[39m         [33m.[39msend(updateData)[33m;[39m
+     [90m 320 |[39m
+    [31m[1m>[22m[39m[90m 321 |[39m       
+expect(response[33m.[39mstatus)[33m.[39mtoBe([35m403[39m)[33m;[39m
+     [90m     |[39m                               [31m[1m^[22m[39m
+     [90m 322 |[39m     })[33m;[39m
+     [90m 323 |[39m   })[33m;[39m
+     [90m 324 |[39m[0m
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:321:31)
+
+  ΓùÅ Order API Endpoints (V1) ΓÇ║ GET /api/v1/orders/payment/success - Payment 
+Success Callback ΓÇ║ should handle payment success callback
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+    [0m [90m 342 |[39m         })[33m;[39m
+     [90m 343 |[39m
+    [31m[1m>[22m[39m[90m 344 |[39m       
+expect(response[33m.[39mstatus)[33m.[39mtoBe([35m200[39m)[33m;[39m
+     [90m     |[39m                               [31m[1m^[22m[39m
+     [90m 345 |[39m       expect(response[33m.[39mbody[33m.[39msuccess)[33m.[
+39mtoBe([36mtrue[39m)[33m;[39m
+     [90m 346 |[39m     })[33m;[39m
+     [90m 347 |[39m   })[33m;[39m[0m
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:344:31)
+
+  ΓùÅ Order API Endpoints (V1) ΓÇ║ GET /api/v1/orders/payment/cancel - Payment 
+Cancel Callback ΓÇ║ should handle payment cancel callback
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+    [0m [90m 365 |[39m         })[33m;[39m
+     [90m 366 |[39m
+    [31m[1m>[22m[39m[90m 367 |[39m       
+expect(response[33m.[39mstatus)[33m.[39mtoBe([35m200[39m)[33m;[39m
+     [90m     |[39m                               [31m[1m^[22m[39m
+     [90m 368 |[39m       expect(response[33m.[39mbody[33m.[39msuccess)[33m.[
+39mtoBe([36mtrue[39m)[33m;[39m
+     [90m 369 |[39m     })[33m;[39m
+     [90m 370 |[39m   })[33m;[39m[0m
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:367:31)
+
+  ΓùÅ Order API Endpoints (V1) ΓÇ║ GET /api/v1/orders/vendor/orders - Vendor Orders 
+ΓÇ║ should retrieve orders filtered by vendor
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+    [0m [90m 383 |[39m         [33m.[39mquery({ page[33m:[39m 
+[35m1[39m[33m,[39m limit[33m:[39m [35m10[39m })[33m;[39m
+     [90m 384 |[39m
+    [31m[1m>[22m[39m[90m 385 |[39m       
+expect(response[33m.[39mstatus)[33m.[39mtoBe([35m200[39m)[33m;[39m
+     [90m     |[39m                               [31m[1m^[22m[39m
+     [90m 386 |[39m       expect(response[33m.[39mbody[33m.[39msuccess)[33m.[
+39mtoBe([36mtrue[39m)[33m;[39m
+     [90m 387 |[39m       expect([33mArray[39m[33m.[39misArray(response[33m.[
+39mbody[33m.[39mdata))[33m.[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m 388 |[39m     })[33m;[39m[0m
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:385:31)
+
+  ΓùÅ Order API Endpoints (V1) ΓÇ║ GET /api/v1/orders/vendor/orders - Vendor Orders 
+ΓÇ║ should reject vendor orders without vendor authentication
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 403
+    Received: 404
+
+    [0m [90m 398 |[39m         
+[33m.[39m[36mset[39m([32m'Authorization'[39m[33m,[39m [32m`Bearer 
+${token}`[39m)[33m;[39m
+     [90m 399 |[39m
+    [31m[1m>[22m[39m[90m 400 |[39m       
+expect(response[33m.[39mstatus)[33m.[39mtoBe([35m403[39m)[33m;[39m
+     [90m     |[39m                               [31m[1m^[22m[39m
+     [90m 401 |[39m     })[33m;[39m
+     [90m 402 |[39m   })[33m;[39m
+     [90m 403 |[39m[0m
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:400:31)
+
+  ΓùÅ Order API Endpoints (V1) ΓÇ║ GET /api/v1/orders/admin/:orderId - Admin Order 
+Details ΓÇ║ should retrieve order details for admin
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+    [0m [90m 415 |[39m         
+[33m.[39m[36mset[39m([32m'Authorization'[39m[33m,[39m [32m`Bearer 
+${adminToken}`[39m)[33m;[39m
+     [90m 416 |[39m
+    [31m[1m>[22m[39m[90m 417 |[39m       
+expect(response[33m.[39mstatus)[33m.[39mtoBe([35m200[39m)[33m;[39m
+     [90m     |[39m                               [31m[1m^[22m[39m
+     [90m 418 |[39m       expect(response[33m.[39mbody[33m.[39msuccess)[33m.[
+39mtoBe([36mtrue[39m)[33m;[39m
+     [90m 419 |[39m       
+expect(response[33m.[39mbody[33m.[39mdata)[33m.[39mtoBeDefined()[33m;[39m
+     [90m 420 |[39m       expect(response[33m.[39mbody[33m.[39mdata[33m.[39mi
+d)[33m.[39mtoBe(order[33m.[39mid)[33m;[39m[0m
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:417:31)
+
+  ΓùÅ Order API Endpoints (V1) ΓÇ║ GET /api/v1/orders/user/track - Order Tracking 
+ΓÇ║ should track order by ID
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+    [0m [90m 434 |[39m         [33m.[39mquery({ orderId[33m:[39m 
+order[33m.[39mid })[33m;[39m
+     [90m 435 |[39m
+    [31m[1m>[22m[39m[90m 436 |[39m       
+expect(response[33m.[39mstatus)[33m.[39mtoBe([35m200[39m)[33m;[39m
+     [90m     |[39m                               [31m[1m^[22m[39m
+     [90m 437 |[39m       expect(response[33m.[39mbody[33m.[39msuccess)[33m.[
+39mtoBe([36mtrue[39m)[33m;[39m
+     [90m 438 |[39m       
+expect(response[33m.[39mbody[33m.[39mdata)[33m.[39mtoBeDefined()[33m;[39m
+     [90m 439 |[39m     })[33m;[39m[0m
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:436:31)
+
+  ΓùÅ Order API Endpoints (V1) ΓÇ║ Order with Different Payment Methods ΓÇ║ should 
+create order with Cash on Delivery
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 201
+    Received: 400
+
+    [0m [90m 468 |[39m         [33m.[39msend(orderData)[33m;[39m
+     [90m 469 |[39m
+    [31m[1m>[22m[39m[90m 470 |[39m       
+expect(response[33m.[39mstatus)[33m.[39mtoBe([35m201[39m)[33m;[39m
+     [90m     |[39m                               [31m[1m^[22m[39m
+     [90m 471 |[39m       expect(response[33m.[39mbody[33m.[39mdata[33m.[39mp
+aymentMethod)[33m.[39mtoBe([33mPaymentMethod[39m[33m.[39m[33mCASH_ON_DELIVERY
+[39m)[33m;[39m
+     [90m 472 |[39m       
+     [90m 473 |[39m       [36mif[39m 
+(response[33m.[39mbody[33m.[39mdata[33m?[39m[33m.[39mid) {[0m
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:470:31)
+
+  ΓùÅ Order API Endpoints (V1) ΓÇ║ Order with Different Payment Methods ΓÇ║ should 
+create order with eSewa payment
+
+    expect(received).toBe(expected) // Object.is equality
+≡ƒº╣ Global test teardown complete
+
+    Expected: 201
+    Received: 400
+
+    [0m [90m 500 |[39m         [33m.[39msend(orderData)[33m;[39m
+     [90m 501 |[39m
+    [31m[1m>[22m[39m[90m 502 |[39m       
+expect(response[33m.[39mstatus)[33m.[39mtoBe([35m201[39m)[33m;[39m
+     [90m     |[39m                               [31m[1m^[22m[39m
+     [90m 503 |[39m       expect(response[33m.[39mbody[33m.[39mdata[33m.[39mp
+aymentMethod)[33m.[39mtoBe([33mPaymentMethod[39m[33m.[39m[33mESEWA[39m)[33m;
+[39m
+     [90m 504 |[39m       
+     [90m 505 |[39m       [36mif[39m 
+(response[33m.[39mbody[33m.[39mdata[33m?[39m[33m.[39mid) {[0m
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:502:31)
+
+  ΓùÅ Order API Endpoints (V1) ΓÇ║ Order with Different Payment Methods ΓÇ║ should 
+create order with Khalti payment
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 201
+    Received: 400
+
+    [0m [90m 532 |[39m         [33m.[39msend(orderData)[33m;[39m
+     [90m 533 |[39m
+    [31m[1m>[22m[39m[90m 534 |[39m       
+expect(response[33m.[39mstatus)[33m.[39mtoBe([35m201[39m)[33m;[39m
+     [90m     |[39m                               [31m[1m^[22m[39m
+     [90m 535 |[39m       expect(response[33m.[39mbody[33m.[39mdata[33m.[39mp
+aymentMethod)[33m.[39mtoBe([33mPaymentMethod[39m[33m.[39m[33mKHALIT[39m)[33m
+;[39m
+     [90m 536 |[39m       
+     [90m 537 |[39m       [36mif[39m 
+(response[33m.[39mbody[33m.[39mdata[33m?[39m[33m.[39mid) {[0m
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:534:31)
+
+  ΓùÅ Order API Endpoints (V1) ΓÇ║ Property 18: Order Creation from Cart ΓÇ║ should 
+create orders from cart with matching items (10 iterations)
+
+    thrown: "Exceeded timeout of 30000 ms for a test.
+    Add a timeout value to this test to increase the timeout, if this is a 
+long-running test. See https://jestjs.io/docs/api#testname-fn-timeout."
+
+    [0m [90m 550 |[39m [90m   */[39m
+     [90m 551 |[39m   describe([32m'Property 18: Order Creation from 
+Cart'[39m[33m,[39m () [33m=>[39m {
+    [31m[1m>[22m[39m[90m 552 |[39m     it([32m'should create orders from cart 
+with matching items (10 iterations)'[39m[33m,[39m [36masync[39m () [33m=>[39m 
+{
+     [90m     |[39m     [31m[1m^[22m[39m
+     [90m 553 |[39m       [36mconst[39m iterations [33m=[39m 
+[35m10[39m[33m;[39m
+     [90m 554 |[39m
+     [90m 555 |[39m       [36mfor[39m ([36mlet[39m i [33m=[39m 
+[35m0[39m[33m;[39m i [33m<[39m iterations[33m;[39m i[33m++[39m) {[0m
+
+      at src/__tests__/integration/orders.test.ts:552:5
+      at src/__tests__/integration/orders.test.ts:551:3
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:44:1)
+
+  ΓùÅ Order API Endpoints (V1) ΓÇ║ Property 19: Order Status Transitions ΓÇ║ should 
+persist order status updates (10 iterations)
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+    [0m [90m 654 |[39m
+     [90m 655 |[39m         [90m// Verify status update[39m
+    [31m[1m>[22m[39m[90m 656 |[39m         
+expect(response[33m.[39mstatus)[33m.[39mtoBe([35m200[39m)[33m;[39m
+     [90m     |[39m                                 [31m[1m^[22m[39m
+     [90m 657 |[39m         expect(response[33m.[39mbody[33m.[39mdata[33m.[39
+mstatus)[33m.[39mtoBe(newStatus)[33m;[39m
+     [90m 658 |[39m
+     [90m 659 |[39m         [90m// Retrieve order to verify persistence[39m[0m
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:656:33)
+
+  ΓùÅ Order API Endpoints (V1) ΓÇ║ Property 20: Payment Status Updates ΓÇ║ should 
+update payment status on success callback (10 iterations)
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 404
+
+    [0m [90m 697 |[39m
+     [90m 698 |[39m         [90m// Verify payment success handling[39m
+    [31m[1m>[22m[39m[90m 699 |[39m         
+expect(response[33m.[39mstatus)[33m.[39mtoBe([35m200[39m)[33m;[39m
+     [90m     |[39m                                 [31m[1m^[22m[39m
+     [90m 700 |[39m         expect(response[33m.[39mbody[33m.[39msuccess)[33m.
+[39mtoBe([36mtrue[39m)[33m;[39m
+     [90m 701 |[39m
+     [90m 702 |[39m         [90m// Note: Actual payment status update 
+verification would require[39m[0m
+
+      at Object.<anonymous> (src/__tests__/integration/orders.test.ts:699:33)
+
+Test Suites: 1 failed, 1 total
+Tests:       17 failed, 4 passed, 21 total
+Snapshots:   0 total
+Time:        59.83 s, estimated 60 s
+Ran all test suites matching orders.test.ts.

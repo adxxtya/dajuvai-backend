@@ -1,6 +1,7 @@
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Product } from '../entities/product.entity';
 import AppDataSource from '../config/db.config';
+import TestDataSource from '../config/db.test.config';
 import { CreateReviewInput, UpdateReviewInput } from '../utils/zod_validations/review.zod';
 import { APIError } from '../utils/ApiError.utils';
 import { Review } from '../entities/reviews.entity';
@@ -17,12 +18,15 @@ export class ReviewService {
     private reviewRepository: Repository<Review>;
     private productRepository: Repository<Product>;
 
-    constructor() {
+    constructor(dataSource?: DataSource) {
+        // Use provided DataSource or fall back to appropriate default
+        const ds = dataSource || (process.env.NODE_ENV === 'test' ? TestDataSource : AppDataSource);
+        
         // Initialize repository for Review entity to handle DB operations on reviews
-        this.reviewRepository = AppDataSource.getRepository(Review);
+        this.reviewRepository = ds.getRepository(Review);
 
         // Initialize repository for Product entity to validate product existence and fetch product data
-        this.productRepository = AppDataSource.getRepository(Product);
+        this.productRepository = ds.getRepository(Product);
     }
 
     /**

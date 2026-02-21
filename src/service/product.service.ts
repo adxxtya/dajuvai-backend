@@ -61,11 +61,11 @@ export class ProductService {
         this.dealRepository = this.dataSource.getRepository(Deal);
         this.brandRepository = this.dataSource.getRepository(Brand);
         this.bannerRepository = this.dataSource.getRepository(Banner);
-        this.vendorService = new VendorService();
+        this.vendorService = new VendorService(this.dataSource);
         this.imageUploadService = new ImageUploadService();
         this.imageDeletionService = new ImageDeletionService();
-        this.categoryService = new CategoryService();
-        this.subcategoryService = new SubcategoryService();
+        this.categoryService = new CategoryService(this.dataSource);
+        this.subcategoryService = new SubcategoryService(this.dataSource);
         this.bannerService = new BannerService();
         this.dealService = new DealService();
         this.variantRepository = this.dataSource.getRepository(Variant);

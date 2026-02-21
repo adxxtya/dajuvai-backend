@@ -1,19 +1,23 @@
+import { DataSource, Repository } from "typeorm";
 import AppDataSource from "../config/db.config";
+import TestDataSource from "../config/db.test.config";
 import { OrderItem, OrderStatus } from "../entities/orderItems.entity";
 import { Product } from "../entities/product.entity";
 import { Order } from "../entities/order.entity";
 import config from "../config/env.config";
 import { InventoryStatus } from "../entities/product.enum";
-import { Repository } from "typeorm";
 
 export class VendorDashBoardService {
     // Repositories for DB operations on Products and OrderItems
     private productRepository: Repository<Product>;
     private orderItemRepository: Repository<OrderItem>;
+    private dataSource: DataSource;
 
-    constructor() {
-        this.productRepository = AppDataSource.getRepository(Product);
-        this.orderItemRepository = AppDataSource.getRepository(OrderItem);
+    constructor(dataSource?: DataSource) {
+        // Use provided DataSource or fallback to appropriate default
+        this.dataSource = dataSource || (process.env.NODE_ENV === 'test' ? TestDataSource : AppDataSource);
+        this.productRepository = this.dataSource.getRepository(Product);
+        this.orderItemRepository = this.dataSource.getRepository(OrderItem);
     }
 
     /**
@@ -111,7 +115,7 @@ export class VendorDashBoardService {
     }
 
     async getTotalSales(vendorId: number, startDate?: string, endDate?: string) {
-        const query = AppDataSource.getRepository(OrderItem)
+        const query = this.dataSource.getRepository(OrderItem)
             .createQueryBuilder("oi")
             .innerJoin(Order, "o", "o.id = oi.orderId")
             .select("COALESCE(SUM(oi.price), 0)", "totalSales")
@@ -142,7 +146,7 @@ export class VendorDashBoardService {
 
     async getLowStockProducts(vendorId: number, page: number) {
         const pageSize = 5;
-        const productsRepo = AppDataSource.getRepository(Product);
+        const productsRepo = this.dataSource.getRepository(Product);
 
         // Base query
         const query = productsRepo
@@ -186,7 +190,7 @@ export class VendorDashBoardService {
 
 
     async getTopProductsByVendor(vendorId: number, limit = 5, startDate?: string, endDate?: string) {
-        const qb = AppDataSource.getRepository(OrderItem)
+        const qb = this.dataSource.getRepository(OrderItem)
             .createQueryBuilder("oi")
             .select("p.id", "productId")
             .addSelect("p.name", "productName")
@@ -222,7 +226,7 @@ export class VendorDashBoardService {
     async getRevenueBySubcategoryForVendor(vendorId: number, filterParams: { startDate?: string, endDate?: string }) {
 
         const { startDate, endDate } = filterParams;
-        const qb = AppDataSource.getRepository(OrderItem)
+        const qb = this.dataSource.getRepository(OrderItem)
             .createQueryBuilder("oi")
             .select("sc.name", "subcategory")
             .addSelect("SUM(oi.price * oi.quantity)", "revenue")
@@ -250,7 +254,7 @@ export class VendorDashBoardService {
     async revenueByCategoryForVendor(vendorId: number, filterParams: { startDate?: string, endDate?: string }) {
         const { startDate, endDate } = filterParams;
 
-        const qb = AppDataSource.getRepository(OrderItem)
+        const qb = this.dataSource.getRepository(OrderItem)
             .createQueryBuilder("oi")
             .select("c.name", "category")
             .addSelect("SUM(oi.price * oi.quantity)", "revenue")
@@ -277,7 +281,7 @@ export class VendorDashBoardService {
     }
 
     async getSalesTrend(vendorId: number, period: 'daily' | 'weekly' | 'monthly' = 'daily', days: number = 7) {
-        const qb = AppDataSource.getRepository(OrderItem)
+        const qb = this.dataSource.getRepository(OrderItem)
             .createQueryBuilder("oi")
             .innerJoin("oi.order", "o")
             .where("oi.vendorId = :vendorId", { vendorId })

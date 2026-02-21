@@ -1,4 +1,4 @@
-import { Repository, EntityManager } from 'typeorm';
+import { Repository, EntityManager, DataSource } from 'typeorm';
 import AppDataSource from '../../config/db.config';
 import { Order, OrderStatus, PaymentStatus, PaymentMethod } from '../../entities/order.entity';
 import { OrderItem } from '../../entities/orderItems.entity';
@@ -29,15 +29,17 @@ export class OrderService {
     private orderItemRepository: Repository<OrderItem>;
     private variantRepository: Repository<Variant>;
     private promoService: PromoService;
+    private dataSource: DataSource;
 
-    constructor() {
-        this.orderRepository = new OrderRepository(AppDataSource);
-        this.productRepository = new ProductRepository(AppDataSource);
-        this.cartRepository = AppDataSource.getRepository(Cart);
-        this.addressRepository = AppDataSource.getRepository(Address);
-        this.userRepository = AppDataSource.getRepository(User);
-        this.orderItemRepository = AppDataSource.getRepository(OrderItem);
-        this.variantRepository = AppDataSource.getRepository(Variant);
+    constructor(dataSource?: DataSource) {
+        this.dataSource = dataSource || AppDataSource;
+        this.orderRepository = new OrderRepository(this.dataSource);
+        this.productRepository = new ProductRepository(this.dataSource);
+        this.cartRepository = this.dataSource.getRepository(Cart);
+        this.addressRepository = this.dataSource.getRepository(Address);
+        this.userRepository = this.dataSource.getRepository(User);
+        this.orderItemRepository = this.dataSource.getRepository(OrderItem);
+        this.variantRepository = this.dataSource.getRepository(Variant);
         this.promoService = new PromoService();
     }
 
@@ -48,8 +50,8 @@ export class OrderService {
     async createOrder(
         userId: number,
         orderData: IOrderCreateRequest
-    ): Promise<{ order: Order; vendorIds: number[] }> {
-        return await AppDataSource.transaction(async (manager) => {
+    ): Promise<Order> {
+        return await this.dataSource.transaction(async (manager) => {
             const { shippingAddress, paymentMethod, isBuyNow, productId, variantId, quantity } = orderData;
 
             // Get user
@@ -87,8 +89,8 @@ export class OrderService {
             // Validate stock availability
             await this.validateStockInTransaction(items, manager);
 
-            // Get or create address
-            const address = await this.getOrCreateAddress(userId, shippingAddress, user, manager);
+            // Get or create address - pass null for shippingAddress if using ID
+            const address = await this.getOrCreateAddress(userId, shippingAddress || null, user, manager, orderData);
 
             // Calculate shipping fee
             const shippingFee = await this.calculateShippingFee(address, items);
@@ -122,10 +124,19 @@ export class OrderService {
                 }
             }
 
-            return {
-                order: savedOrder,
-                vendorIds: shippingFee.vendorIds
-            };
+            // Load full order with relations
+            const finalOrder = await manager.findOne(Order, {
+                where: { id: savedOrder.id },
+                relations: [
+                    'orderedBy',
+                    'shippingAddress',
+                    'orderItems',
+                    'orderItems.product',
+                    'orderItems.variant'
+                ]
+            });
+
+            return finalOrder;
         });
     }
 
@@ -134,7 +145,7 @@ export class OrderService {
      * Updates status and restores stock in transaction
      */
     async cancelOrder(orderId: number, userId: number): Promise<Order> {
-        return await AppDataSource.transaction(async (manager) => {
+        return await this.dataSource.transaction(async (manager) => {
             const order = await manager.findOne(Order, {
                 where: { id: orderId, orderedById: userId },
                 relations: ['orderItems', 'orderItems.product', 'orderItems.variant']
@@ -192,16 +203,21 @@ export class OrderService {
      * Get user orders with pagination
      */
     async getUserOrders(userId: number, page: number = 1, limit: number = 20): Promise<{ orders: Order[]; total: number }> {
-        const skip = (page - 1) * limit;
-        const [orders, total] = await this.orderRepository.findAndCount({
-            where: { orderedById: userId },
-            relations: ['orderItems', 'orderItems.product', 'orderItems.variant', 'shippingAddress'],
-            order: { createdAt: 'DESC' },
-            skip,
-            take: limit
-        });
+        try {
+            const skip = (page - 1) * limit;
+            const [orders, total] = await this.orderRepository.findAndCount({
+                where: { orderedById: userId },
+                relations: ['orderItems', 'shippingAddress'],
+                order: { createdAt: 'DESC' },
+                skip,
+                take: limit
+            });
 
-        return { orders, total };
+            return { orders, total };
+        } catch (error) {
+            console.error('getUserOrders error:', error);
+            throw new APIError(500, `Failed to retrieve orders: ${error.message}`);
+        }
     }
 
     /**
@@ -303,10 +319,28 @@ export class OrderService {
      */
     private async getOrCreateAddress(
         userId: number,
-        shippingAddress: IShippingAddressRequest,
+        shippingAddress: IShippingAddressRequest | null,
         user: User,
-        manager: EntityManager
+        manager: EntityManager,
+        orderData?: any
     ): Promise<Address> {
+        // If shippingAddressId is provided, use existing address
+        if (orderData?.shippingAddressId) {
+            const existingAddress = await manager.findOne(Address, {
+                where: { id: orderData.shippingAddressId, userId }
+            });
+            if (!existingAddress) {
+                throw new APIError(404, 'Shipping address not found');
+            }
+            return existingAddress;
+        }
+
+        // If no shippingAddress object provided, throw error
+        if (!shippingAddress) {
+            throw new APIError(400, 'Either shippingAddress or shippingAddressId must be provided');
+        }
+
+        // Otherwise, get or create address from shippingAddress object
         let address = await manager.findOne(Address, { where: { userId } });
 
         if (address) {

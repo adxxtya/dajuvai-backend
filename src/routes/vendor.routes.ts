@@ -22,7 +22,7 @@ const authRateLimiter = rateLimit({
 });
 
 const router = Router();
-const vendorController = new VendorController();
+const vendorController = new VendorController(AppDataSource);
 const productController = new ProductController(AppDataSource);
 
 /**

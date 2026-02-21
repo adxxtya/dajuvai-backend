@@ -89,14 +89,14 @@ class DatabaseLogger {
 const AppDataSource = new DataSource({
   type: "postgres",
   url: process.env.DATABASE_URL,
-  synchronize: process.env.NODE_ENV === 'development',
-  logging: process.env.NODE_ENV === 'development',
-  logger: new DatabaseLogger() as any,
+  synchronize: process.env.NODE_ENV === 'development', // Don't synchronize in test (TestDataSource handles it)
+  logging: process.env.NODE_ENV === 'development', // Disable logging in tests
+  logger: process.env.NODE_ENV !== 'test' ? new DatabaseLogger() as any : undefined,
   maxQueryExecutionTime: process.env.NODE_ENV === 'production' ? 500 : 100, // Log slow queries
   entities: [User, Category, Subcategory, Product, Vendor, Brand, Cart, CartItem, Wishlist, WishlistItem, Review, Deal, Address, Order, OrderItem,
     Banner, Contact, District, HomePageSection, Promo, Variant, HomeCategory, Notification, Session],
   migrations: [__dirname.includes('dist') ? 'dist/migrations/*.js' : 'src/migrations/*.ts'],
-  migrationsRun: true,
+  migrationsRun: process.env.NODE_ENV !== 'test', // Don't run migrations in test environment
   extra: {
     max: 20,
     min: 5,

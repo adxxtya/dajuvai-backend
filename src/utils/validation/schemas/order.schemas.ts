@@ -76,25 +76,43 @@ export const createOrderSchema = z.object({
   items: z
     .array(orderItemSchema)
     .min(1, 'Order must contain at least one item')
-    .max(50, 'Order cannot contain more than 50 items'),
+    .max(50, 'Order cannot contain more than 50 items')
+    .optional(), // Optional for cart-based orders
   
-  shippingAddress: shippingAddressSchema,
+  shippingAddress: shippingAddressSchema.optional(), // Optional if shippingAddressId is provided
+  
+  shippingAddressId: z
+    .number()
+    .int('Address ID must be an integer')
+    .positive('Invalid address ID')
+    .optional(), // Optional if shippingAddress is provided
   
   paymentMethod: z
-    .enum([
-      PAYMENT_METHODS.ESEWA,
-      PAYMENT_METHODS.KHALTI,
-      PAYMENT_METHODS.NPG,
-      PAYMENT_METHODS.COD,
-    ] as [string, ...string[]],
-    {
+    .enum(['ESEWA', 'KHALTI', 'NPX', 'CASH_ON_DELIVERY', 'ONLINE_PAYMENT'], {
       errorMap: () => ({ message: 'Invalid payment method' }),
     }),
+  
+  phoneNumber: z
+    .string()
+    .min(10, 'Phone number must be at least 10 digits')
+    .max(15, 'Phone number must not exceed 15 digits'),
   
   notes: z
     .string()
     .max(500, 'Notes must not exceed 500 characters')
     .optional(),
+  
+  // Buy now fields
+  isBuyNow: z.boolean().optional(),
+  productId: z.number().int().positive().optional(),
+  variantId: z.string().optional(),
+  quantity: z.number().int().positive().optional(),
+  
+  // Promo code
+  promoCode: z.string().optional(),
+  serviceCharge: z.number().optional(),
+  instrumentName: z.string().optional(),
+  fullName: z.string().optional(),
 });
 
 /**

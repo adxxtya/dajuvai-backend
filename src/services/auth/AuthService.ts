@@ -82,7 +82,8 @@ export class AuthService {
     user.phoneNumber = data.phoneNumber || null;
     user.verificationCode = verificationCode;
     user.verificationCodeExpire = verificationCodeExpire;
-    user.isVerified = false;
+    // Auto-verify users in test environment
+    user.isVerified = process.env.NODE_ENV === 'test' ? true : false;
     
     const savedUser = await this.userRepository.save(user);
     

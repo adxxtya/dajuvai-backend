@@ -1,4 +1,5 @@
 import { DataSource } from "typeorm";
+import { config } from "dotenv";
 import { User } from "../entities/user.entity";
 import { Subcategory } from "../entities/subcategory.entity";
 import { Category } from "../entities/category.entity";
@@ -24,73 +25,55 @@ import { HomeCategory } from "../entities/home.category";
 import { Notification } from "../entities/notification.entity";
 import { Session } from "../entities/session.entity";
 
+config({ path: '.env.test' });
+
 /**
- * Test database configuration
- * Uses a separate test database to avoid affecting development data
+ * Test Database Configuration
+ * Creates a separate DataSource for integration tests
+ * Requirements: 1.1, 1.2
  */
 const TestDataSource = new DataSource({
   type: "postgres",
-  url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL?.replace(/\/[^/]+$/, '/dajuvai_test'),
+  url: process.env.TEST_DATABASE_URL || process.env.DATABASE_URL,
   synchronize: true, // Auto-create schema for tests
   logging: false, // Disable logging in tests for cleaner output
-  dropSchema: false, // Don't drop schema automatically - we'll handle this manually
+  dropSchema: false, // Don't drop schema automatically - we'll handle cleanup manually
   entities: [
-    User, Category, Subcategory, Product, Vendor, Brand, Cart, CartItem, 
-    Wishlist, WishlistItem, Review, Deal, Address, Order, OrderItem,
-    Banner, Contact, District, HomePageSection, Promo, Variant, 
-    HomeCategory, Notification, Session
+    User, 
+    Category, 
+    Subcategory, 
+    Product, 
+    Vendor, 
+    Brand, 
+    Cart, 
+    CartItem, 
+    Wishlist, 
+    WishlistItem, 
+    Review, 
+    Deal, 
+    Address, 
+    Order, 
+    OrderItem,
+    Banner, 
+    Contact, 
+    District, 
+    HomePageSection, 
+    Promo, 
+    Variant, 
+    HomeCategory, 
+    Notification, 
+    Session
   ],
   migrations: [],
   migrationsRun: false,
   extra: {
-    max: 5,
-    min: 1,
-    idleTimeoutMillis: 10000,
-    connectionTimeoutMillis: 2000,
+    max: 10, // Smaller pool for tests
+    min: 2,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 10000,
   },
+  ssl: false, // No SSL for test database
 });
 
-/**
- * Initialize test database connection
- */
-export async function initializeTestDatabase(): Promise<DataSource> {
-  if (!TestDataSource.isInitialized) {
-    await TestDataSource.initialize();
-  }
-  return TestDataSource;
-}
-
-/**
- * Close test database connection
- */
-export async function closeTestDatabase(): Promise<void> {
-  if (TestDataSource.isInitialized) {
-    await TestDataSource.destroy();
-  }
-}
-
-/**
- * Clear all data from test database
- * Useful for cleaning up between test suites
- */
-export async function clearTestDatabase(): Promise<void> {
-  if (!TestDataSource.isInitialized) {
-    return;
-  }
-
-  const entities = TestDataSource.entityMetadatas;
-
-  // Disable foreign key checks temporarily
-  await TestDataSource.query('SET session_replication_role = replica;');
-
-  // Clear all tables
-  for (const entity of entities) {
-    const repository = TestDataSource.getRepository(entity.name);
-    await repository.clear();
-  }
-
-  // Re-enable foreign key checks
-  await TestDataSource.query('SET session_replication_role = DEFAULT;');
-}
-
 export default TestDataSource;
+export { TestDataSource };

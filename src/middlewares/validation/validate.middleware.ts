@@ -38,8 +38,20 @@ export function validate(schema: ZodSchema, source: ValidationSource = 'body') {
       const validated = await schema.parseAsync(data);
       
       // Replace request data with validated data
-      // This ensures type safety and applies any transformations
-      req[source] = validated;
+      // For query and params, we need to use Object.assign since they're read-only
+      if (source === 'query' || source === 'params') {
+        // Store validated data in a custom property
+        (req as any).validated = (req as any).validated || {};
+        (req as any).validated[source] = validated;
+        
+        // Also update the original object properties (for backward compatibility)
+        Object.keys(validated).forEach(key => {
+          (req[source] as any)[key] = validated[key];
+        });
+      } else {
+        // For body, we can directly assign
+        req[source] = validated;
+      }
       
       next();
     } catch (error) {

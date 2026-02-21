@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { User, UserRole } from '../entities/user.entity';
 import AppDataSource from '../config/db.config';
+import TestDataSource from '../config/db.test.config';
 import { string, ZodError, ZodSchema } from 'zod';
 import { Vendor } from '../entities/vendor.entity';
 import { APIError } from '../utils/ApiError.utils';
@@ -40,10 +41,31 @@ export interface CombinedAuthRequest<P = {}, ResBody = {}, ReqBody = {}, ReqQuer
 }
 
 
+/**
+ * Get the active DataSource (handles both production and test environments)
+ * In test environment, use TestDataSource; otherwise use AppDataSource
+ */
+const getDataSource = () => {
+  if (process.env.NODE_ENV === 'test') {
+    if (!TestDataSource.isInitialized) {
+      throw new Error('TestDataSource is not initialized. Please ensure test database connection is established.');
+    }
+    return TestDataSource;
+  }
+  
+  if (!AppDataSource.isInitialized) {
+    throw new Error('AppDataSource is not initialized. Please ensure database connection is established.');
+  }
+  return AppDataSource;
+};
 
-const userDB = AppDataSource.getRepository(User);
-const vendorDB = AppDataSource.getRepository(Vendor);
-const productDB = AppDataSource.getRepository(Product);
+/**
+ * Get repositories lazily to ensure they use the correct DataSource
+ * This is important for testing where we need to use TestDataSource
+ */
+const getUserDB = () => getDataSource().getRepository(User);
+const getVendorDB = () => getDataSource().getRepository(Vendor);
+const getProductDB = () => getDataSource().getRepository(Product);
 
 
 
@@ -97,11 +119,16 @@ export const combinedAuthMiddleware = async (
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret') as { id: number; email: string; businessName?: string; role?: string;[key: string]: any };
 
-        // //('Decoded token:', decoded);
+        if (process.env.NODE_ENV === 'test') {
+            console.log('🔐 Token decoded:', { id: decoded.id, email: decoded.email, businessName: decoded.businessName, role: decoded.role });
+        }
 
         // Check if token is for a vendor (has businessName)
         if (decoded.businessName) {
-            const vendor = await vendorDB.findOneBy({ id: decoded.id });
+            const vendor = await getVendorDB().findOneBy({ id: decoded.id });
+            if (process.env.NODE_ENV === 'test') {
+                console.log('🔍 Vendor lookup result:', vendor ? `Found vendor ${vendor.id}` : 'Vendor not found');
+            }
             if (!vendor) {
                 res.status(401).json({ success: false, message: 'Invalid token: vendor not found' });
                 return;
@@ -113,7 +140,7 @@ export const combinedAuthMiddleware = async (
 
         // Check if token is for a user/admin (has role)
         if (decoded.role) {
-            const user = await userDB.findOneBy({ id: decoded.id });
+            const user = await getUserDB().findOneBy({ id: decoded.id });
             if (!user) {
                 res.status(401).json({ success: false, message: 'Invalid token: user not found' });
                 return;
@@ -126,6 +153,9 @@ export const combinedAuthMiddleware = async (
         res.status(401).json({ success: false, message: 'Invalid token: missing role or businessName' });
         return;
     } catch (err) {
+        if (process.env.NODE_ENV === 'test') {
+            console.error('🔐 Token verification error:', err);
+        }
         res.status(401).json({ success: false, message: 'Invalid or expired token' });
         return;
     }
@@ -158,7 +188,7 @@ export const vendorAuthMiddleware = async (req: VendorAuthRequest, res: Response
             businessName: string;
         };
 
-        const vendor = await vendorDB.findOneBy({ id: decoded.id });
+        const vendor = await getVendorDB().findOneBy({ id: decoded.id });
         if (!vendor) {
             throw new APIError(401, 'Vendor not found');
         }
@@ -194,7 +224,7 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
             role: string
         };
 
-        const user = await userDB.findOneBy({ id: decoded.id });
+        const user = await getUserDB().findOneBy({ id: decoded.id });
 
         if (!user.isVerified) {
             throw new APIError(401, "Invalid token")
@@ -297,7 +327,7 @@ export const isVendorAccountOwnerOrAdminOrStaff = async (
 
     if (req.vendor) {
         try {
-            const product = await productDB.findOne({
+            const product = await getProductDB().findOne({
                 where: {
                     id: productId,
                     vendorId: req.vendor.id,

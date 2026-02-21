@@ -1,8 +1,9 @@
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Category } from '../entities/category.entity';
 import { User, UserRole } from '../entities/user.entity';
 import { CreateCategoryInput, UpdateCategoryInput } from '../utils/zod_validations/category.zod';
 import AppDataSource from '../config/db.config';
+import TestDataSource from '../config/db.test.config';
 import { v2 as cloudinary } from 'cloudinary';
 import { APIError } from '../utils/ApiError.utils';
 import { Subcategory } from '../entities/subcategory.entity';
@@ -21,10 +22,11 @@ export class CategoryService {
     /**
      * Initializes repositories and configures Cloudinary.
      */
-    constructor() {
-        this.categoryRepository = AppDataSource.getRepository(Category);
-        this.userRepository = AppDataSource.getRepository(User);
-        this.subcategoryRepository = AppDataSource.getRepository(Subcategory);
+    constructor(dataSource?: DataSource) {
+        const ds = dataSource || (process.env.NODE_ENV === 'test' ? TestDataSource : AppDataSource);
+        this.categoryRepository = ds.getRepository(Category);
+        this.userRepository = ds.getRepository(User);
+        this.subcategoryRepository = ds.getRepository(Subcategory);
         this.cacheService = new CacheService();
 
         cloudinary.config({

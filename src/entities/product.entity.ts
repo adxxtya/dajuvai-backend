@@ -9,6 +9,16 @@ import { Brand } from "./brand.entity";
 import { Review } from "./reviews.entity";
 import { Variant } from "./variant.entity";
 
+// Transformer to convert decimal strings to numbers
+const decimalTransformer = {
+    to: (value: number | null | undefined): string | null => {
+        return value !== null && value !== undefined ? value.toString() : null;
+    },
+    from: (value: string | null | undefined): number | null => {
+        return value !== null && value !== undefined ? parseFloat(value) : null;
+    }
+};
+
 @Entity('products')
 @Index(['vendorId', 'subcategoryId'])
 export class Product {
@@ -23,13 +33,13 @@ export class Product {
     description?: string;
 
     // Only used if hasVariants = false
-    @Column({ type: 'decimal', precision: 8, scale: 2, nullable: true })
+    @Column({ type: 'decimal', precision: 8, scale: 2, nullable: true, transformer: decimalTransformer })
     basePrice?: number;
 
-    @Column({ type: 'decimal', precision: 8, scale: 2, nullable: true })
+    @Column({ type: 'decimal', precision: 8, scale: 2, nullable: true, transformer: decimalTransformer })
     finalPrice?: number;
 
-    @Column({ type: 'decimal', precision: 5, scale: 2, default: 0 })
+    @Column({ type: 'decimal', precision: 5, scale: 2, default: 0, transformer: decimalTransformer })
     discount: number;
 
     @Column({ type: 'enum', enum: DiscountType, default: DiscountType.PERCENTAGE })

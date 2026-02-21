@@ -1,6 +1,7 @@
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Vendor } from '../entities/vendor.entity';
 import AppDataSource from '../config/db.config';
+import TestDataSource from '../config/db.test.config';
 import { IVendorSignupRequest, IUpdateVendorRequest } from '../interface/vendor.interface';
 import { Address } from '../entities/address.entity';
 import { APIError } from '../utils/ApiError.utils';
@@ -16,14 +17,23 @@ export class VendorService {
     private readonly vendorRepository: Repository<Vendor>;
     private addressRepository: Repository<Address>;
     private districtService: DistrictService;
+    private dataSource: DataSource;
 
     /**
      * Initializes repositories and dependent services.
      */
-    constructor() {
-        this.vendorRepository = AppDataSource.getRepository(Vendor);
-        this.addressRepository = AppDataSource.getRepository(Address);
-        this.districtService = new DistrictService();
+    constructor(dataSource?: DataSource) {
+        // Use provided DataSource or fallback to appropriate default
+        this.dataSource = dataSource || (process.env.NODE_ENV === 'test' ? TestDataSource : AppDataSource);
+        
+        // Check if DataSource is initialized before getting repositories
+        if (!this.dataSource.isInitialized) {
+            console.warn('⚠️ VendorService: DataSource not initialized yet. Repositories will be lazy-loaded.');
+        }
+        
+        this.vendorRepository = this.dataSource.getRepository(Vendor);
+        this.addressRepository = this.dataSource.getRepository(Address);
+        this.districtService = new DistrictService(this.dataSource);
     }
 
     /**
@@ -156,19 +166,22 @@ export class VendorService {
      * @returns {Promise<Vendor | null>} The vendor entity or null if not found.
      */
     async findVendorByEmailLogin(email: string): Promise<Vendor | null> {
-        // Trim whitespace and convert to lowercase for case-insensitive matching
-        const normalizedEmail = email.trim().toLowerCase();
-        console.log('🔍 VendorService: Searching for email:', normalizedEmail);
-        
-        // Use LOWER() function for case-insensitive search
-        const vendor = await this.vendorRepository
-            .createQueryBuilder('vendor')
-            .where('LOWER(vendor.email) = LOWER(:email)', { email: normalizedEmail })
-            .leftJoinAndSelect('vendor.district', 'district')
-            .getOne();
-        
-        console.log('🔍 VendorService: Vendor found:', vendor ? `YES (id: ${vendor.id})` : 'NO');
-        return vendor;
+        try {
+            // Trim whitespace for consistent matching
+            const normalizedEmail = email.trim();
+            console.log('🔍 VendorService: Searching for email:', normalizedEmail);
+            
+            // Use simple findOne - district is eager-loaded automatically
+            const vendor = await this.vendorRepository.findOne({
+                where: { email: normalizedEmail }
+            });
+            
+            console.log('🔍 VendorService: Vendor found:', vendor ? `YES (id: ${vendor.id})` : 'NO');
+            return vendor;
+        } catch (error) {
+            console.error('❌ VendorService: Database error in findVendorByEmailLogin:', error);
+            throw error;
+        }
     }
 
     /**
@@ -213,7 +226,7 @@ export class VendorService {
     async updateVendorService(id: number, updateData: Partial<IUpdateVendorRequest>) {
         let district: District;
         if (updateData.district) {
-            const districtDb = AppDataSource.getRepository(District);
+            const districtDb = this.dataSource.getRepository(District);
 
             district = await districtDb.findOne({
                 where: {

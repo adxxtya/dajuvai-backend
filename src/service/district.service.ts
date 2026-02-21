@@ -1,6 +1,7 @@
-import { Repository } from "typeorm";
+import { DataSource, Repository } from "typeorm";
 import { District } from '../entities/district.entity';
 import AppDataSource from "../config/db.config";
+import TestDataSource from "../config/db.test.config";
 import { APIError } from "../utils/ApiError.utils";
 import { Vendor } from "../entities/vendor.entity";
 
@@ -13,13 +14,16 @@ import { Vendor } from "../entities/vendor.entity";
 export class DistrictService {
     private districtRepository: Repository<District>;
     private vendorRepository: Repository<Vendor>;
+    private dataSource: DataSource;
 
     /**
      * Initializes repositories for District and Vendor entities.
      */
-    constructor() {
-        this.districtRepository = AppDataSource.getRepository(District);
-        this.vendorRepository = AppDataSource.getRepository(Vendor);
+    constructor(dataSource?: DataSource) {
+        // Use provided DataSource or fallback to appropriate default
+        this.dataSource = dataSource || (process.env.NODE_ENV === 'test' ? TestDataSource : AppDataSource);
+        this.districtRepository = this.dataSource.getRepository(District);
+        this.vendorRepository = this.dataSource.getRepository(Vendor);
     }
 
     /**

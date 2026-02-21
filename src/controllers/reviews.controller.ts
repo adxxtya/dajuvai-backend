@@ -1,9 +1,11 @@
 import { Request, Response } from 'express';
+import { DataSource } from 'typeorm';
 import { APIError } from '../utils/ApiError.utils';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { ReviewService } from '../service/review.service';
 import { ICreateReviewRequest } from '../interface/review.interface';
 import { UpdateReviewInput } from '../utils/zod_validations/review.zod';
+import AppDataSource from '../config/db.config';
 
 /**
  * @class ReviewController
@@ -17,8 +19,8 @@ export class ReviewController {
      * @constructor
      * @description Initializes the ReviewController by setting up the ReviewService for business logic related to reviews.
      */
-    constructor() {
-        this.reviewService = new ReviewService();
+    constructor(dataSource?: DataSource) {
+        this.reviewService = new ReviewService(dataSource || AppDataSource);
     }
 
     /**

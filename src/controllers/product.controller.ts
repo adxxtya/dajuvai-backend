@@ -30,7 +30,7 @@ export class ProductController {
      */
     constructor(dataSource: DataSource) {
         this.productService = new ProductService(dataSource);
-        this.reviewService = new ReviewService();
+        this.reviewService = new ReviewService(dataSource);
         this.imageUploadService = new ImageUploadService();
     }
 
@@ -53,10 +53,10 @@ export class ProductController {
 
             const averageRating = await this.reviewService.getReviewsByProductId(productId);
 
-            // Send success response with product data
+            // Send success response with product data using consistent format
             res.status(200).json({
                 success: true,
-                product: product,
+                data: product,
                 avgRating: averageRating
             })
 
@@ -258,13 +258,19 @@ export class ProductController {
             // Fetch product by ID and subcategory
             const product = await this.productService.getProductById(Number(id), Number(subcategoryId));
 
-            const productWithRating = await this.returnProuctRatings(product);
-
             // Return 404 if product doesn't exist
             if (!product) {
                 logger.warn('Product not found', { productId: id, subcategoryId });
                 return res.status(404).json({ success: false, message: 'Product not found' });
             }
+
+            // Get rating for single product
+            const avgRating = await this.reviewService.getAverageRating(product.id);
+            const productWithRating = {
+                ...product,
+                avgRating: avgRating.avg,
+                count: avgRating.count
+            };
 
             logger.info('Product retrieved successfully', { productId: id });
 

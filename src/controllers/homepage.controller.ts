@@ -29,12 +29,13 @@ export class HomePageSectionController {
      * @constructor
      * @description Instantiates HomePageSectionService for business logic.
      */
-    constructor() {
+    constructor(dataSource?: DataSource) {
+        const ds = dataSource || AppDataSource;
         this.homePageSectionService = new HomePageSectionService();
-        this.reviewService = new ReviewService();
-        this.productController = new ProductController(AppDataSource)
-        this.productService = new ProductService(AppDataSource)
-        this.categoryService = new CategoryService()
+        this.reviewService = new ReviewService(ds);
+        this.productController = new ProductController(ds);
+        this.productService = new ProductService(ds);
+        this.categoryService = new CategoryService();
         this.subcategoryService = new SubcategoryService();
         this.dealService = new DealService();
     }

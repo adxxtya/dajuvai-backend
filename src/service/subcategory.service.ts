@@ -1,8 +1,9 @@
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Subcategory } from '../entities/subcategory.entity';
 import { Category } from '../entities/category.entity';
 import { User, UserRole } from '../entities/user.entity';
 import AppDataSource from '../config/db.config';
+import TestDataSource from '../config/db.test.config';
 import { CreateSubCategoryInput, UpdateSubCategoryInput } from '../utils/zod_validations/subcategory.zod';
 import { APIError } from '../utils/ApiError.utils';
 import { v2 as cloudinary } from 'cloudinary';
@@ -21,15 +22,16 @@ export class SubcategoryService {
      * Initializes the service with subcategory, category, user, and product repositories.
      * Configures Cloudinary for image upload/deletion.
      */
-    constructor() {
+    constructor(dataSource?: DataSource) {
+        const ds = dataSource || (process.env.NODE_ENV === 'test' ? TestDataSource : AppDataSource);
         // Initialize repository to manage subcategories in DB
-        this.subcategoryRepository = AppDataSource.getRepository(Subcategory);
+        this.subcategoryRepository = ds.getRepository(Subcategory);
         // Initialize repository to manage categories in DB
-        this.categoryRepository = AppDataSource.getRepository(Category);
+        this.categoryRepository = ds.getRepository(Category);
         // Initialize repository to manage users in DB (for admin checks)
-        this.userRepository = AppDataSource.getRepository(User);
+        this.userRepository = ds.getRepository(User);
         // Initialize repository to manage products (for dependency checks)
-        this.productRepository = AppDataSource.getRepository(Product);
+        this.productRepository = ds.getRepository(Product);
 
         // Configure Cloudinary with environment variables
         cloudinary.config({

@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { DataSource } from 'typeorm';
 import { AuthRequest, VendorAuthRequest, isVendor } from '../middlewares/auth.middleware';
 import { sendVerificationEmail } from '../utils/nodemailer.utils';
 import { VendorService } from '../service/vendor.service';
@@ -61,10 +62,10 @@ export class VendorController {
     /**
      * Initializes the controller with a JWT secret and VendorService instance.
      */
-    constructor() {
+    constructor(dataSource?: DataSource) {
         this.jwtSecret = process.env.JWT_SECRET || 'your_jwt_secret';
-        this.vendorService = new VendorService();
-        this.districtService = new DistrictService();
+        this.vendorService = new VendorService(dataSource);
+        this.districtService = new DistrictService(dataSource);
     }
 
     /**
@@ -426,7 +427,13 @@ export class VendorController {
             if (error instanceof APIError) {
                 res.status(error.status).json({ success: false, message: error.message });
             } else {
-                throw new APIError(503, 'Authentication service temporarily unavailable');
+                console.error('❌ Login error details:', error);
+                console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+                res.status(503).json({ 
+                    success: false, 
+                    message: 'Authentication service temporarily unavailable',
+                    debug: error instanceof Error ? error.message : String(error)
+                });
             }
         }
     }
