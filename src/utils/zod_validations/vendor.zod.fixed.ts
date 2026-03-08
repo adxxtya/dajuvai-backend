@@ -2,8 +2,7 @@ import { z } from 'zod';
 
 /**
  * Schema for vendor signup input validation.
- * Validates businessName, email, password, phoneNumber, and district.
- * Business address commented out but can be added as nested object if needed.
+ * Accepts both nested bankDetails object and flattened bank fields for backward compatibility.
  */
 export const vendorSignupSchema = z.object({
     businessName: z.string().min(3, 'Business name must be at least 3 characters').max(100),
@@ -19,13 +18,33 @@ export const vendorSignupSchema = z.object({
     citizenshipDocuments: z.array(z.string().url('Invalid citizenship document URL')).optional(),
     chequePhoto: z.string().url('Invalid cheque photo URL').min(1, 'Cheque photo is required'),
 
-    // Flattened bank details (matches database schema)
-    accountName: z.string().min(1, 'Account name is required'),
-    bankName: z.string().min(1, 'Bank name is required'),
-    accountNumber: z.string().min(1, 'Account number is required'),
-    bankBranch: z.string().min(1, 'Bank branch is required'),
+    // Accept flattened bank details (from mobile app)
+    accountName: z.string().min(1, 'Account name is required').optional(),
+    bankName: z.string().min(1, 'Bank name is required').optional(),
+    accountNumber: z.string().min(1, 'Account number is required').optional(),
+    bankBranch: z.string().min(1, 'Bank branch is required').optional(),
     bankCode: z.string().optional(),
-});
+    
+    // OR accept nested bankDetails object (for backward compatibility)
+    bankDetails: z.object({
+        accountName: z.string().min(1, 'Account name is required'),
+        bankName: z.string().min(1, 'Bank name is required'),
+        accountNumber: z.string().min(1, 'Account number is required'),
+        bankBranch: z.string().min(1, 'Bank branch is required'),
+        bankCode: z.string().optional(),
+    }).optional(),
+}).refine(
+    (data) => {
+        // Ensure either flattened fields OR nested bankDetails is provided
+        const hasFlattened = data.accountName && data.bankName && data.accountNumber && data.bankBranch;
+        const hasNested = data.bankDetails;
+        return hasFlattened || hasNested;
+    },
+    {
+        message: 'Bank details are required (either as individual fields or bankDetails object)',
+        path: ['bankDetails'],
+    }
+);
 
 
 /**
@@ -78,5 +97,18 @@ export const resetPasswordSchema = z.object({
  * Schema to update vendor info.
  * Fields optional except for id which must be a positive integer.
  */
-export const updateVendorSchema = vendorSignupSchema.partial();
-
+export const updateVendorSchema = z.object({
+    id: z.number().int().positive('ID must be a positive integer'),
+    businessName: z.string()
+        .min(3, 'Business name must be at least 3 characters long')
+        .max(100, 'Business name must not exceed 100 characters')
+        .optional(),
+    email: z.string().email('Invalid email format').optional(),
+    businessAddress: z.string()
+        .min(10, 'Business address must be at least 10 characters long')
+        .max(500, 'Business address must not exceed 500 characters')
+        .optional(),
+    phoneNumber: z.string()
+        .regex(/^\+?[1-9]\d{1,14}$/, 'Invalid phone number format')
+        .optional(),
+});
